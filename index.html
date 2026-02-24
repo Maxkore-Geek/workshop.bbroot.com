@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔧 实验工坊 · Workshop</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'JetBrains Mono', 'Fira Code', monospace;
+            background: #1a1a1a;
+            color: #e0e0e0;
+            line-height: 1.6;
+        }
+
+        /* 工业风背景 */
+        .workshop-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                linear-gradient(45deg, rgba(255, 100, 0, 0.03) 25%, transparent 25%),
+                linear-gradient(-45deg, rgba(255, 100, 0, 0.03) 25%, transparent 25%),
+                linear-gradient(45deg, transparent 75%, rgba(255, 100, 0, 0.03) 75%),
+                linear-gradient(-45deg, transparent 75%, rgba(255, 100, 0, 0.03) 75%);
+            background-size: 20px 20px;
+            background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+            z-index: -1;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 20px;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* 头部 */
+        header {
+            text-align: center;
+            margin-bottom: 60px;
+            padding: 40px 0;
+            border-bottom: 2px solid #ff6600;
+        }
+
+        h1 {
+            font-size: 4rem;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            color: #ff6600;
+            text-shadow: 0 0 10px rgba(255, 102, 0, 0.3);
+            margin-bottom: 15px;
+        }
+
+        .subtitle {
+            font-size: 1.2rem;
+            color: #888;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .subtitle span {
+            color: #ff6600;
+            background: rgba(255, 102, 0, 0.1);
+            padding: 4px 12px;
+            border-radius: 20px;
+        }
+
+        /* 工坊介绍 */
+        .workshop-intro {
+            background: rgba(30, 30, 30, 0.8);
+            border-left: 4px solid #ff6600;
+            padding: 30px;
+            margin-bottom: 50px;
+            border-radius: 0 20px 20px 0;
+            backdrop-filter: blur(5px);
+        }
+
+        .workshop-intro p {
+            font-size: 1.1rem;
+            color: #ccc;
+            margin-bottom: 15px;
+        }
+
+        .workshop-intro .highlight {
+            color: #ff6600;
+            font-weight: bold;
+        }
+
+        /* 实验网格 */
+        .experiment-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin: 50px 0;
+        }
+
+        .exp-card {
+            background: rgba(20, 20, 20, 0.9);
+            border: 1px solid #333;
+            border-radius: 16px;
+            padding: 30px;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .exp-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 3px;
+            background: linear-gradient(90deg, transparent, #ff6600, transparent);
+            transition: left 0.5s ease;
+        }
+
+        .exp-card:hover::before {
+            left: 100%;
+        }
+
+        .exp-card:hover {
+            transform: translateY(-5px);
+            border-color: #ff6600;
+            box-shadow: 0 10px 30px rgba(255, 102, 0, 0.2);
+        }
+
+        .exp-status {
+            display: inline-block;
+            padding: 4px 12px;
+            background: #333;
+            color: #999;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            margin-bottom: 15px;
+        }
+
+        .exp-status.active {
+            background: #ff6600;
+            color: #1a1a1a;
+            font-weight: bold;
+        }
+
+        .exp-title {
+            font-size: 1.8rem;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: #fff;
+        }
+
+        .exp-desc {
+            color: #aaa;
+            margin-bottom: 20px;
+            font-size: 0.95rem;
+        }
+
+        .exp-tags {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+
+        .exp-tag {
+            background: #2a2a2a;
+            color: #ff6600;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            border: 1px solid #333;
+        }
+
+        .exp-link {
+            color: #ff6600;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            font-weight: 500;
+            transition: gap 0.3s ease;
+        }
+
+        .exp-link:hover {
+            gap: 10px;
+            color: #ff8533;
+        }
+
+        /* 工具台 */
+        .toolbench {
+            background: rgba(20, 20, 20, 0.9);
+            border: 1px solid #333;
+            border-radius: 16px;
+            padding: 40px;
+            margin: 50px 0;
+        }
+
+        .toolbench-title {
+            font-size: 2rem;
+            color: #ff6600;
+            margin-bottom: 30px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .tool-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 20px;
+        }
+
+        .tool-item {
+            background: #2a2a2a;
+            border: 1px solid #333;
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .tool-item:hover {
+            border-color: #ff6600;
+            transform: translateY(-3px);
+        }
+
+        .tool-icon {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+
+        .tool-name {
+            color: #fff;
+            font-weight: 500;
+        }
+
+        .tool-desc {
+            color: #888;
+            font-size: 0.8rem;
+            margin-top: 5px;
+        }
+
+        /* 日志区 */
+        .log-section {
+            margin: 50px 0;
+        }
+
+        .log-entry {
+            background: rgba(20, 20, 20, 0.9);
+            border-left: 3px solid #ff6600;
+            padding: 20px;
+            margin-bottom: 15px;
+            border-radius: 0 8px 8px 0;
+            font-family: monospace;
+        }
+
+        .log-date {
+            color: #ff6600;
+            font-size: 0.9rem;
+            margin-bottom: 5px;
+        }
+
+        .log-content {
+            color: #ccc;
+        }
+
+        .log-content code {
+            background: #333;
+            padding: 2px 6px;
+            border-radius: 4px;
+            color: #ff6600;
+        }
+
+        /* 底部 */
+        footer {
+            margin-top: 80px;
+            padding: 30px 0;
+            text-align: center;
+            border-top: 1px solid #333;
+            color: #666;
+        }
+
+        .footer-links {
+            margin-top: 20px;
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+        }
+
+        .footer-links a {
+            color: #888;
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        .footer-links a:hover {
+            color: #ff6600;
+        }
+
+        @media (max-width: 768px) {
+            h1 { font-size: 2.8rem; }
+            .subtitle { font-size: 1rem; }
+        }
+    </style>
+</head>
+<body>
+    <div class="workshop-bg"></div>
+    
+    <div class="container">
+        <header>
+            <h1>🔧 实验工坊</h1>
+            <div class="subtitle">
+                <span>Workshop</span> · 动手 · 创造 · 实验
+            </div>
+        </header>
+
+        <div class="workshop-intro">
+            <p>这里是 <span class="highlight">Maxkore 的实验工坊</span> —— 一个自由探索、动手创造的数字化工坊。</p>
+            <p>从 CSS 特效到小工具原型，从数据可视化到 AI 小应用，所有有趣的想法都在这里萌芽。</p>
+            <p style="color: #ff6600; margin-top: 20px;">⚡ 工坊状态：热火朝天 · 持续上新</p>
+        </div>
+
+        <!-- 进行中的实验 -->
+        <h2 style="color: #fff; margin-bottom: 30px; display: flex; align-items: center; gap: 10px;">
+            <span style="color: #ff6600;">⚡</span> 进行中的实验
+        </h2>
+
+        <div class="experiment-grid">
+            <div class="exp-card">
+                <span class="exp-status active">进行中</span>
+                <div class="exp-title">🎨 CSS 特效工坊</div>
+                <div class="exp-desc">各种炫酷的 CSS 特效、动画、交互效果实验。</div>
+                <div class="exp-tags">
+                    <span class="exp-tag">CSS3</span>
+                    <span class="exp-tag">动画</span>
+                    <span class="exp-tag">交互</span>
+                </div>
+                <a href="#" class="exp-link">查看实验 →</a>
+            </div>
+
+            <div class="exp-card">
+                <span class="exp-status">筹备中</span>
+                <div class="exp-title">📊 可视化实验室</div>
+                <div class="exp-desc">数据可视化、图表库探索、创意图表。</div>
+                <div class="exp-tags">
+                    <span class="exp-tag">D3.js</span>
+                    <span class="exp-tag">ECharts</span>
+                </div>
+                <a href="#" class="exp-link" style="opacity: 0.5;">即将开启</a>
+            </div>
+
+            <div class="exp-card">
+                <span class="exp-status">筹备中</span>
+                <div class="exp-title">🤖 AI 小应用</div>
+                <div class="exp-desc">各种有趣的 AI 小工具、API 调用实验。</div>
+                <div class="exp-tags">
+                    <span class="exp-tag">OpenAI</span>
+                    <span class="exp-tag">API</span>
+                </div>
+                <a href="#" class="exp-link" style="opacity: 0.5;">即将开启</a>
+            </div>
+        </div>
+
+        <!-- 工具台 -->
+        <div class="toolbench">
+            <div class="toolbench-title">
+                <span>🛠️</span> 常用工具台
+            </div>
+            <div class="tool-grid">
+                <div class="tool-item">
+                    <div class="tool-icon">🎨</div>
+                    <div class="tool-name">颜色工具</div>
+                    <div class="tool-desc">调色板、渐变生成</div>
+                </div>
+                <div class="tool-item">
+                    <div class="tool-icon">📏</div>
+                    <div class="tool-name">CSS 单位转换</div>
+                    <div class="tool-desc">px/rem/em/vw</div>
+                </div>
+                <div class="tool-item">
+                    <div class="tool-icon">🔧</div>
+                    <div class="tool-name">JSON 格式化</div>
+                    <div class="tool-desc">美化、验证、转换</div>
+                </div>
+                <div class="tool-item">
+                    <div class="tool-icon">📝</div>
+                    <div class="tool-name">正则表达式</div>
+                    <div class="tool-desc">测试、调试、学习</div>
+                </div>
+                <div class="tool-item">
+                    <div class="tool-icon">⚡</div>
+                    <div class="tool-name">Base64 转换</div>
+                    <div class="tool-desc">编码/解码</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 工坊日志 -->
+        <h2 style="color: #fff; margin-bottom: 30px;">📋 工坊日志</h2>
+        
+        <div class="log-section">
+            <div class="log-entry">
+                <div class="log-date">2026-02-24</div>
+                <div class="log-content">🚀 工坊正式开张！开始筹备第一个 <code>CSS 特效工坊</code></div>
+            </div>
+            <div class="log-entry">
+                <div class="log-date">2026-02-24</div>
+                <div class="log-content">🔧 工具台添置：<code>颜色工具</code>、<code>JSON 格式化</code> 等常用工具</div>
+            </div>
+            <div class="log-entry">
+                <div class="log-date">2026-02-24</div>
+                <div class="log-content">📝 规划中：<code>数据可视化实验室</code>、<code>AI 小应用</code> 即将启动</div>
+            </div>
+        </div>
+
+        <!-- 其他站点链接 -->
+        <div style="background: rgba(20,20,20,0.8); border-radius: 16px; padding: 30px; margin: 50px 0;">
+            <h3 style="color: #ff6600; margin-bottom: 20px;">🔗 更多站点</h3>
+            <div style="display: flex; gap: 20px; flex-wrap: wrap;">
+                <a href="https://maxkore.bbroot.com" style="color: #888; text-decoration: none;">📝 主博客</a>
+                <a href="https://maxkore-wiki.bbroot.com" style="color: #888; text-decoration: none;">📚 Wiki</a>
+                <a href="https://docs.bbroot.com" style="color: #888; text-decoration: none;">📄 文档站</a>
+                <a href="https://modsu.bbroot.com" style="color: #888; text-decoration: none;">⚡ 模速空间</a>
+            </div>
+        </div>
+
+        <footer>
+            <p>© 2026 Maxkore · 实验工坊 · 动手创造一切</p>
+            <div class="footer-links">
+                <a href="https://github.com/Maxkore-Geek" target="_blank">GitHub</a>
+                <a href="#" id="random-tool">🎲 随机工具</a>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        // 随机工具跳转
+        document.getElementById('random-tool').addEventListener('click', function(e) {
+            e.preventDefault();
+            const tools = [
+                'https://toolbox.google.com/',
+                'https://caniuse.com/',
+                'https://regexr.com/',
+                'https://cssgradient.io/'
+            ];
+            const random = tools[Math.floor(Math.random() * tools.length)];
+            window.open(random, '_blank');
+        });
+    </script>
+</body>
+</html>
