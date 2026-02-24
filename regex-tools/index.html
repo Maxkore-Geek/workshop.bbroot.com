@@ -1,0 +1,1014 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔍 正则表达式工具 - 实验工坊</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'JetBrains Mono', 'Fira Code', monospace;
+            background: #1a1a1a;
+            color: #e0e0e0;
+            line-height: 1.6;
+        }
+
+        /* 代码风格背景 */
+        .regex-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                repeating-linear-gradient(45deg, 
+                    rgba(0, 255, 128, 0.02) 0px,
+                    rgba(0, 255, 128, 0.02) 2px,
+                    transparent 2px,
+                    transparent 20px);
+            z-index: -1;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 40px 20px;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* 头部 */
+        header {
+            text-align: center;
+            margin-bottom: 60px;
+            padding: 40px 0;
+            border-bottom: 2px solid #00ff80;
+        }
+
+        h1 {
+            font-size: 3.5rem;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            color: #00ff80;
+            text-shadow: 0 0 10px rgba(0, 255, 128, 0.3);
+            margin-bottom: 15px;
+        }
+
+        .subtitle {
+            font-size: 1.2rem;
+            color: #888;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .subtitle span {
+            color: #00ff80;
+            background: rgba(0, 255, 128, 0.1);
+            padding: 4px 12px;
+            border-radius: 20px;
+        }
+
+        /* 返回链接 */
+        .back-link {
+            display: inline-block;
+            margin-bottom: 30px;
+            color: #888;
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        .back-link:hover {
+            color: #00ff80;
+        }
+
+        /* 工具网格 */
+        .tools-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(600px, 1fr));
+            gap: 30px;
+            margin: 50px 0;
+        }
+
+        .tool-card {
+            background: rgba(20, 20, 20, 0.95);
+            border: 1px solid #333;
+            border-radius: 16px;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+        }
+
+        .tool-card:hover {
+            transform: translateY(-5px);
+            border-color: #00ff80;
+            box-shadow: 0 10px 30px rgba(0, 255, 128, 0.2);
+        }
+
+        .card-header {
+            padding: 20px;
+            border-bottom: 1px solid #333;
+            background: linear-gradient(90deg, rgba(0,255,128,0.1), transparent);
+        }
+
+        .card-title {
+            font-size: 1.6rem;
+            color: #00ff80;
+            margin-bottom: 10px;
+        }
+
+        .card-tags {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .card-tag {
+            background: #2a2a2a;
+            color: #00ff80;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            border: 1px solid #333;
+        }
+
+        .card-body {
+            padding: 20px;
+        }
+
+        /* 正则测试区域 */
+        .regex-test {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .input-group label {
+            min-width: 80px;
+            color: #00ff80;
+        }
+
+        .input-group input {
+            flex: 1;
+            background: #2a2a2a;
+            border: 1px solid #333;
+            color: #fff;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .input-group input:focus {
+            outline: none;
+            border-color: #00ff80;
+        }
+
+        .flags-group {
+            display: flex;
+            gap: 15px;
+            margin: 10px 0;
+            flex-wrap: wrap;
+        }
+
+        .flag-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            color: #888;
+        }
+
+        .flag-item input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+            accent-color: #00ff80;
+        }
+
+        .test-area {
+            background: #2a2a2a;
+            border: 1px solid #333;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .test-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 15px;
+            background: #1a1a1a;
+            border-bottom: 1px solid #333;
+        }
+
+        .test-textarea {
+            width: 100%;
+            min-height: 200px;
+            padding: 15px;
+            background: #1a1a1a;
+            border: none;
+            color: #00ff80;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.9rem;
+            line-height: 1.5;
+            resize: vertical;
+        }
+
+        .test-textarea:focus {
+            outline: none;
+        }
+
+        .results-area {
+            background: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 15px;
+            min-height: 150px;
+            font-family: 'JetBrains Mono', monospace;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+
+        .match-item {
+            padding: 8px;
+            margin: 5px 0;
+            background: #2a2a2a;
+            border-left: 3px solid #00ff80;
+            border-radius: 4px;
+        }
+
+        .match-index {
+            color: #888;
+            font-size: 0.8rem;
+        }
+
+        .match-value {
+            color: #00ff80;
+            font-weight: bold;
+        }
+
+        .match-groups {
+            margin-left: 20px;
+            color: #aaa;
+            font-size: 0.9rem;
+        }
+
+        .error-message {
+            color: #ff4444;
+            padding: 10px;
+            background: rgba(255, 68, 68, 0.1);
+            border: 1px solid #ff4444;
+            border-radius: 8px;
+        }
+
+        /* 语法速查表 */
+        .syntax-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .syntax-item {
+            background: #2a2a2a;
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .syntax-item:hover {
+            border-color: #00ff80;
+            transform: translateY(-2px);
+        }
+
+        .syntax-pattern {
+            color: #00ff80;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .syntax-desc {
+            color: #888;
+            font-size: 0.8rem;
+        }
+
+        .syntax-example {
+            color: #aaa;
+            font-size: 0.8rem;
+            margin-top: 5px;
+            font-family: monospace;
+        }
+
+        .example-btn {
+            background: #2a2a2a;
+            border: 1px solid #00ff80;
+            color: #00ff80;
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            transition: all 0.3s ease;
+        }
+
+        .example-btn:hover {
+            background: #00ff80;
+            color: #1a1a1a;
+        }
+
+        .load-more {
+            text-align: center;
+            margin: 50px 0;
+        }
+
+        .load-more button {
+            background: transparent;
+            border: 2px solid #00ff80;
+            color: #00ff80;
+            padding: 15px 40px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            border-radius: 40px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .load-more button:hover {
+            background: #00ff80;
+            color: #1a1a1a;
+        }
+
+        footer {
+            margin-top: 80px;
+            padding: 30px 0;
+            text-align: center;
+            border-top: 1px solid #333;
+            color: #666;
+        }
+
+        .footer-links a {
+            color: #888;
+            text-decoration: none;
+            margin: 0 10px;
+            transition: color 0.3s ease;
+        }
+
+        .footer-links a:hover {
+            color: #00ff80;
+        }
+
+        /* Base64 预告 */
+        .coming-soon {
+            background: linear-gradient(135deg, rgba(0, 255, 128, 0.1), rgba(0, 128, 255, 0.1));
+            border: 2px dashed #00ff80;
+            border-radius: 16px;
+            padding: 40px;
+            text-align: center;
+            margin: 40px 0;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 0.8; }
+            50% { opacity: 1; }
+            100% { opacity: 0.8; }
+        }
+
+        .coming-soon h2 {
+            font-size: 2.5rem;
+            color: #00ff80;
+            margin-bottom: 20px;
+        }
+
+        .coming-soon p {
+            color: #aaa;
+            font-size: 1.2rem;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .coming-soon .features {
+            display: flex;
+            gap: 30px;
+            justify-content: center;
+            margin-top: 30px;
+            flex-wrap: wrap;
+        }
+
+        .feature-item {
+            background: rgba(0, 255, 128, 0.1);
+            padding: 15px 25px;
+            border-radius: 40px;
+            color: #00ff80;
+            font-weight: bold;
+        }
+
+        .card-footer {
+            padding: 20px;
+            border-top: 1px solid #333;
+        }
+
+        .card-desc {
+            color: #aaa;
+            font-size: 0.9rem;
+            margin-bottom: 10px;
+        }
+
+        .card-code {
+            background: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 15px;
+            font-family: monospace;
+            font-size: 0.8rem;
+            color: #00ff80;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .card-code:hover {
+            border-color: #00ff80;
+            background: #222;
+        }
+    </style>
+</head>
+<body>
+    <div class="regex-bg"></div>
+    
+    <div class="container">
+        <a href="https://workshop.bbroot.com/" class="back-link">← 返回实验工坊</a>
+        
+        <header>
+            <h1>🔍 正则表达式工具</h1>
+            <div class="subtitle">
+                <span>Regex Tools</span> · 测试 · 调试 · 学习
+            </div>
+        </header>
+
+        <!-- 主工具区 -->
+        <div class="tools-grid">
+            <!-- 工具1: 正则测试器 -->
+            <div class="tool-card">
+                <div class="card-header">
+                    <div class="card-title">🧪 正则表达式测试器</div>
+                    <div class="card-tags">
+                        <span class="card-tag">测试</span>
+                        <span class="card-tag">调试</span>
+                        <span class="card-tag">匹配</span>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="regex-test">
+                        <div class="input-group">
+                            <label>正则 / /</label>
+                            <input type="text" id="regexPattern" value="\b\w+\b" placeholder="输入正则表达式...">
+                        </div>
+                        
+                        <div class="flags-group">
+                            <div class="flag-item">
+                                <input type="checkbox" id="flagG" checked> <span>g (全局匹配)</span>
+                            </div>
+                            <div class="flag-item">
+                                <input type="checkbox" id="flagI"> <span>i (忽略大小写)</span>
+                            </div>
+                            <div class="flag-item">
+                                <input type="checkbox" id="flagM"> <span>m (多行模式)</span>
+                            </div>
+                            <div class="flag-item">
+                                <input type="checkbox" id="flagS"> <span>s (点号匹配换行)</span>
+                            </div>
+                            <div class="flag-item">
+                                <input type="checkbox" id="flagU"> <span>u (Unicode)</span>
+                            </div>
+                            <div class="flag-item">
+                                <input type="checkbox" id="flagY"> <span>y (粘连模式)</span>
+                            </div>
+                        </div>
+
+                        <div class="test-area">
+                            <div class="test-header">
+                                <span class="json-label">测试文本</span>
+                                <div>
+                                    <button class="example-btn" onclick="loadTextExample('lorem')">📝 示例文本</button>
+                                    <button class="example-btn" onclick="clearText()">🗑️ 清空</button>
+                                </div>
+                            </div>
+                            <textarea id="testText" class="test-textarea" placeholder="输入要测试的文本...">
+The quick brown fox jumps over the lazy dog.
+Contact: john.doe@example.com or support@company.com
+Visit our website: https://www.example.com
+Date: 2026-02-24, Time: 15:30:00
+Phone: +86 123-4567-8901</textarea>
+                        </div>
+
+                        <div style="display: flex; gap: 10px; justify-content: center;">
+                            <button class="converter-btn" onclick="testRegex()" style="background: #00ff80; color: #1a1a1a;">🔍 测试匹配</button>
+                            <button class="converter-btn" onclick="replaceRegex()" style="background: #00ff80; color: #1a1a1a;">🔄 替换测试</button>
+                        </div>
+
+                        <div class="input-group" id="replaceGroup" style="display: none;">
+                            <label>替换为</label>
+                            <input type="text" id="replaceText" placeholder="$1-$2">
+                        </div>
+
+                        <div class="results-area" id="regexResults">
+                            点击测试按钮查看匹配结果...
+                        </div>
+
+                        <div id="regexError" class="error-message" style="display: none;"></div>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <div class="card-desc">实时测试正则表达式，查看匹配结果和分组信息。</div>
+                    <div class="card-code" onclick="copyCode(this)">
+                        const regex = new RegExp(pattern, flags);
+                        const matches = text.match(regex);
+                    </div>
+                </div>
+            </div>
+
+            <!-- 工具2: 正则语法速查 -->
+            <div class="tool-card">
+                <div class="card-header">
+                    <div class="card-title">📚 正则语法速查</div>
+                    <div class="card-tags">
+                        <span class="card-tag">学习</span>
+                        <span class="card-tag">参考</span>
+                        <span class="card-tag">速查</span>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="syntax-grid">
+                        <div class="syntax-item" onclick="insertPattern('.')">
+                            <div class="syntax-pattern">.</div>
+                            <div class="syntax-desc">匹配任意字符（除换行）</div>
+                            <div class="syntax-example">a.c → abc</div>
+                        </div>
+                        <div class="syntax-item" onclick="insertPattern('\\d')">
+                            <div class="syntax-pattern">\d</div>
+                            <div class="syntax-desc">数字 [0-9]</div>
+                            <div class="syntax-example">\d+ → 123</div>
+                        </div>
+                        <div class="syntax-item" onclick="insertPattern('\\w')">
+                            <div class="syntax-pattern">\w</div>
+                            <div class="syntax-desc">单词字符 [a-zA-Z0-9_]</div>
+                            <div class="syntax-example">\w+ → hello</div>
+                        </div>
+                        <div class="syntax-item" onclick="insertPattern('\\s')">
+                            <div class="syntax-pattern">\s</div>
+                            <div class="syntax-desc">空白字符</div>
+                            <div class="syntax-example">\s+ → 空格</div>
+                        </div>
+                        <div class="syntax-item" onclick="insertPattern('^')">
+                            <div class="syntax-pattern">^</div>
+                            <div class="syntax-desc">行首</div>
+                            <div class="syntax-example">^Hello</div>
+                        </div>
+                        <div class="syntax-item" onclick="insertPattern('$')">
+                            <div class="syntax-pattern">$</div>
+                            <div class="syntax-desc">行尾</div>
+                            <div class="syntax-example">world$</div>
+                        </div>
+                        <div class="syntax-item" onclick="insertPattern('*')">
+                            <div class="syntax-pattern">*</div>
+                            <div class="syntax-desc">0次或多次</div>
+                            <div class="syntax-example">a*</div>
+                        </div>
+                        <div class="syntax-item" onclick="insertPattern('+')">
+                            <div class="syntax-pattern">+</div>
+                            <div class="syntax-desc">1次或多次</div>
+                            <div class="syntax-example">a+</div>
+                        </div>
+                        <div class="syntax-item" onclick="insertPattern('?')">
+                            <div class="syntax-pattern">?</div>
+                            <div class="syntax-desc">0次或1次</div>
+                            <div class="syntax-example">a?</div>
+                        </div>
+                        <div class="syntax-item" onclick="insertPattern('{n}')">
+                            <div class="syntax-pattern">{n}</div>
+                            <div class="syntax-desc">恰好n次</div>
+                            <div class="syntax-example">a{3}</div>
+                        </div>
+                        <div class="syntax-item" onclick="insertPattern('{n,}')">
+                            <div class="syntax-pattern">{n,}</div>
+                            <div class="syntax-desc">至少n次</div>
+                            <div class="syntax-example">a{2,}</div>
+                        </div>
+                        <div class="syntax-item" onclick="insertPattern('{n,m}')">
+                            <div class="syntax-pattern">{n,m}</div>
+                            <div class="syntax-desc">n到m次</div>
+                            <div class="syntax-example">a{2,4}</div>
+                        </div>
+                        <div class="syntax-item" onclick="insertPattern('[]')">
+                            <div class="syntax-pattern">[]</div>
+                            <div class="syntax-desc">字符集</div>
+                            <div class="syntax-example">[aeiou]</div>
+                        </div>
+                        <div class="syntax-item" onclick="insertPattern('[^]')">
+                            <div class="syntax-pattern">[^]</div>
+                            <div class="syntax-desc">否定字符集</div>
+                            <div class="syntax-example">[^0-9]</div>
+                        </div>
+                        <div class="syntax-item" onclick="insertPattern('()')">
+                            <div class="syntax-pattern">()</div>
+                            <div class="syntax-desc">捕获组</div>
+                            <div class="syntax-example">(ab)+</div>
+                        </div>
+                        <div class="syntax-item" onclick="insertPattern('(?:)')">
+                            <div class="syntax-pattern">(?:)</div>
+                            <div class="syntax-desc">非捕获组</div>
+                            <div class="syntax-example">(?:ab)+</div>
+                        </div>
+                        <div class="syntax-item" onclick="insertPattern('(?=)')">
+                            <div class="syntax-pattern">(?=)</div>
+                            <div class="syntax-desc">正向预查</div>
+                            <div class="syntax-example">\d+(?=px)</div>
+                        </div>
+                        <div class="syntax-item" onclick="insertPattern('(?!)')">
+                            <div class="syntax-pattern">(?!)</div>
+                            <div class="syntax-desc">负向预查</div>
+                            <div class="syntax-example">\d+(?!px)</div>
+                        </div>
+                        <div class="syntax-item" onclick="insertPattern('|')">
+                            <div class="syntax-pattern">|</div>
+                            <div class="syntax-desc">或</div>
+                            <div class="syntax-example">cat|dog</div>
+                        </div>
+                        <div class="syntax-item" onclick="insertPattern('\\b')">
+                            <div class="syntax-pattern">\b</div>
+                            <div class="syntax-desc">单词边界</div>
+                            <div class="syntax-example">\bword\b</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <div class="card-desc">点击语法项插入到正则表达式。</div>
+                    <div class="card-code" onclick="copyCode(this)">
+                        // 常用正则示例
+                        email: /^[\w.-]+@[\w.-]+\.\w+$/
+                        phone: /^1[3-9]\d{9}$/
+                    </div>
+                </div>
+            </div>
+
+            <!-- 工具3: 常用正则示例 -->
+            <div class="tool-card">
+                <div class="card-header">
+                    <div class="card-title">📋 常用正则示例</div>
+                    <div class="card-tags">
+                        <span class="card-tag">示例</span>
+                        <span class="card-tag">模板</span>
+                        <span class="card-tag">实战</span>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="syntax-grid" style="grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));">
+                        <div class="syntax-item" onclick="loadRegexExample('email')">
+                            <div class="syntax-pattern">📧 邮箱</div>
+                            <div class="syntax-desc">[\w.-]+@[\w.-]+\.\w+</div>
+                            <div class="syntax-example">user@example.com</div>
+                        </div>
+                        <div class="syntax-item" onclick="loadRegexExample('phone')">
+                            <div class="syntax-pattern">📱 手机号</div>
+                            <div class="syntax-desc">1[3-9]\d{9}</div>
+                            <div class="syntax-example">13812345678</div>
+                        </div>
+                        <div class="syntax-item" onclick="loadRegexExample('url')">
+                            <div class="syntax-pattern">🌐 URL</div>
+                            <div class="syntax-desc">https?://[^\s]+</div>
+                            <div class="syntax-example">https://example.com</div>
+                        </div>
+                        <div class="syntax-item" onclick="loadRegexExample('ip')">
+                            <div class="syntax-pattern">🌍 IP地址</div>
+                            <div class="syntax-desc">\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}</div>
+                            <div class="syntax-example">192.168.1.1</div>
+                        </div>
+                        <div class="syntax-item" onclick="loadRegexExample('date')">
+                            <div class="syntax-pattern">📅 日期</div>
+                            <div class="syntax-desc">\d{4}-\d{2}-\d{2}</div>
+                            <div class="syntax-example">2026-02-24</div>
+                        </div>
+                        <div class="syntax-item" onclick="loadRegexExample('time')">
+                            <div class="syntax-pattern">⏰ 时间</div>
+                            <div class="syntax-desc">\d{2}:\d{2}(:\d{2})?</div>
+                            <div class="syntax-example">15:30:00</div>
+                        </div>
+                        <div class="syntax-item" onclick="loadRegexExample('chinese')">
+                            <div class="syntax-pattern">🇨🇳 中文</div>
+                            <div class="syntax-desc">[\u4e00-\u9fa5]+</div>
+                            <div class="syntax-example">你好世界</div>
+                        </div>
+                        <div class="syntax-item" onclick="loadRegexExample('hex')">
+                            <div class="syntax-pattern">🎨 颜色值</div>
+                            <div class="syntax-desc">#?([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})</div>
+                            <div class="syntax-example">#ff6600</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <div class="card-desc">点击示例加载常用正则表达式。</div>
+                    <div class="card-code" onclick="copyCode(this)">
+                        // HTML标签
+                        /<[^>]+>/g
+                    </div>
+                </div>
+            </div>
+
+            <!-- 工具4: 正则调试器 -->
+            <div class="tool-card">
+                <div class="card-header">
+                    <div class="card-title">🐞 正则调试器</div>
+                    <div class="card-tags">
+                        <span class="card-tag">调试</span>
+                        <span class="card-tag">步骤</span>
+                        <span class="card-tag">分析</span>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="regex-test">
+                        <div class="input-group">
+                            <label>正则</label>
+                            <input type="text" id="debugPattern" value="(\d{4})-(\d{2})-(\d{2})">
+                        </div>
+                        <div class="input-group">
+                            <label>文本</label>
+                            <input type="text" id="debugText" value="2026-02-24">
+                        </div>
+                        <button class="converter-btn" onclick="debugRegex()" style="background: #00ff80; color: #1a1a1a;">🔬 调试</button>
+                        <div class="results-area" id="debugResults" style="min-height: 200px; font-family: monospace; line-height: 2;">
+                            点击调试查看匹配过程...
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <div class="card-desc">逐步分析正则匹配过程，帮助理解匹配原理。</div>
+                    <div class="card-code" onclick="copyCode(this)">
+                        // 匹配过程分析
+                        step1: 匹配 \d{4} -> 2026
+                        step2: 匹配 '-' -> -
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Base64 工具预告 -->
+        <div class="coming-soon">
+            <h2>🔐 Base64 转换工具</h2>
+            <p>编码 · 解码 · 图片转换 · 即将上线</p>
+            <div class="features">
+                <span class="feature-item">📝 文本 Base64 编码/解码</span>
+                <span class="feature-item">🖼️ 图片 Base64 转换</span>
+                <span class="feature-item">🔧 文件 Base64 转换</span>
+                <span class="feature-item">📋 一键复制</span>
+            </div>
+            <div style="margin-top: 30px; color: #00ff80; font-size: 1.1rem;">
+                ⏳ 开发中，敬请期待...
+            </div>
+        </div>
+
+        <footer>
+            <p>© 2026 Maxkore · 正则表达式工具</p>
+            <div class="footer-links">
+                <a href="https://workshop.bbroot.com/">← 返回工坊</a>
+                <a href="#" onclick="copyAllCode()">📋 复制所有代码</a>
+                <a href="https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Guide/Regular_Expressions" target="_blank">📚 MDN 文档</a>
+                <a href="https://regex101.com/" target="_blank">🌐 Regex101</a>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        // 测试正则表达式
+        function testRegex() {
+            const pattern = document.getElementById('regexPattern').value;
+            const text = document.getElementById('testText').value;
+            const flags = getFlags();
+            const resultsDiv = document.getElementById('regexResults');
+            const errorDiv = document.getElementById('regexError');
+
+            try {
+                const regex = new RegExp(pattern, flags);
+                const matches = [...text.matchAll(regex)];
+                
+                if (matches.length === 0) {
+                    resultsDiv.innerHTML = '❌ 没有找到匹配项';
+                    errorDiv.style.display = 'none';
+                    return;
+                }
+
+                let html = `<div style="color: #00ff80; margin-bottom: 10px;">✅ 找到 ${matches.length} 个匹配项</div>`;
+                
+                matches.forEach((match, index) => {
+                    html += `<div class="match-item">`;
+                    html += `<div><span class="match-index">#${index + 1}</span> <span class="match-value">"${match[0]}"</span></div>`;
+                    html += `<div class="match-index">位置: ${match.index}</div>`;
+                    
+                    if (match.length > 1) {
+                        html += `<div class="match-groups">捕获组:`;
+                        for (let i = 1; i < match.length; i++) {
+                            html += `<div>  $${i}: "${match[i]}"</div>`;
+                        }
+                        html += `</div>`;
+                    }
+                    
+                    html += `</div>`;
+                });
+
+                resultsDiv.innerHTML = html;
+                errorDiv.style.display = 'none';
+                document.getElementById('replaceGroup').style.display = 'none';
+            } catch (e) {
+                errorDiv.style.display = 'block';
+                errorDiv.innerHTML = `❌ 正则错误：${e.message}`;
+            }
+        }
+
+        // 替换测试
+        function replaceRegex() {
+            const pattern = document.getElementById('regexPattern').value;
+            const text = document.getElementById('testText').value;
+            const flags = getFlags();
+            const replaceText = document.getElementById('replaceText').value;
+            const resultsDiv = document.getElementById('regexResults');
+            const errorDiv = document.getElementById('regexError');
+
+            document.getElementById('replaceGroup').style.display = 'flex';
+
+            if (!replaceText) {
+                resultsDiv.innerHTML = '请输入替换文本';
+                return;
+            }
+
+            try {
+                const regex = new RegExp(pattern, flags);
+                const replaced = text.replace(regex, replaceText);
+                
+                resultsDiv.innerHTML = `<div style="color: #00ff80; margin-bottom: 10px;">🔄 替换结果：</div>`;
+                resultsDiv.innerHTML += `<div style="background: #2a2a2a; padding: 15px; border-radius: 8px;">${escapeHtml(replaced)}</div>`;
+                errorDiv.style.display = 'none';
+            } catch (e) {
+                errorDiv.style.display = 'block';
+                errorDiv.innerHTML = `❌ 替换错误：${e.message}`;
+            }
+        }
+
+        // 获取标志位
+        function getFlags() {
+            let flags = '';
+            if (document.getElementById('flagG').checked) flags += 'g';
+            if (document.getElementById('flagI').checked) flags += 'i';
+            if (document.getElementById('flagM').checked) flags += 'm';
+            if (document.getElementById('flagS').checked) flags += 's';
+            if (document.getElementById('flagU').checked) flags += 'u';
+            if (document.getElementById('flagY').checked) flags += 'y';
+            return flags;
+        }
+
+        // 插入语法到正则输入框
+        function insertPattern(pattern) {
+            const input = document.getElementById('regexPattern');
+            input.value += pattern;
+            input.focus();
+        }
+
+        // 加载正则示例
+        function loadRegexExample(type) {
+            const patterns = {
+                email: '[\\w.-]+@[\\w.-]+\\.\\w+',
+                phone: '1[3-9]\\d{9}',
+                url: 'https?://[^\\s]+',
+                ip: '\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}',
+                date: '\\d{4}-\\d{2}-\\d{2}',
+                time: '\\d{2}:\\d{2}(:\\d{2})?',
+                chinese: '[\\u4e00-\\u9fa5]+',
+                hex: '#?([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})'
+            };
+            
+            document.getElementById('regexPattern').value = patterns[type];
+            testRegex();
+        }
+
+        // 加载文本示例
+        function loadTextExample(type) {
+            const examples = {
+                lorem: `The quick brown fox jumps over the lazy dog.
+Contact: john.doe@example.com or support@company.com
+Visit our website: https://www.example.com
+Date: 2026-02-24, Time: 15:30:00
+Phone: +86 123-4567-8901
+HTML tags: <div class="container">Hello</div>
+Colors: #ff6600, #f60, rgb(255,102,0)`
+            };
+            
+            document.getElementById('testText').value = examples[type];
+        }
+
+        // 清空文本
+        function clearText() {
+            document.getElementById('testText').value = '';
+        }
+
+        // 调试正则
+        function debugRegex() {
+            const pattern = document.getElementById('debugPattern').value;
+            const text = document.getElementById('debugText').value;
+            const resultsDiv = document.getElementById('debugResults');
+            
+            try {
+                const regex = new RegExp(pattern);
+                const match = regex.exec(text);
+                
+                let html = '<div style="color: #00ff80;">🔍 匹配过程分析：</div><br>';
+                
+                if (match) {
+                    html += `<div>✓ 完整匹配: "${match[0]}"</div>`;
+                    html += `<div>📌 匹配位置: ${match.index}</div>`;
+                    
+                    if (match.length > 1) {
+                        html += `<div style="margin-top: 10px;">📦 捕获组：</div>`;
+                        for (let i = 1; i < match.length; i++) {
+                            html += `<div style="margin-left: 20px;">组 ${i}: "${match[i]}"</div>`;
+                        }
+                    }
+                    
+                    // 显示匹配过程中的步骤
+                    html += `<div style="margin-top: 10px;">⚙️ 匹配步骤：</div>`;
+                    let remaining = text;
+                    let pos = 0;
+                    const steps = [];
+                    
+                    while (pos < text.length) {
+                        const step = text.substr(pos, 20);
+                        steps.push(step);
+                        pos += 20;
+                    }
+                    
+                    steps.forEach((step, i) => {
+                        const highlight = step.includes(match[0].substr(0, 10)) ? 'background: #00ff8022;' : '';
+                        html += `<div style="margin-left: 20px; ${highlight}">第${i+1}步: "${step}"</div>`;
+                    });
+                    
+                } else {
+                    html += '<div>❌ 没有匹配项</div>';
+                }
+                
+                resultsDiv.innerHTML = html;
+            } catch (e) {
+                resultsDiv.innerHTML = `❌ 错误：${e.message}`;
+            }
+        }
+
+        // HTML 转义
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // 复制代码
+        function copyCode(element) {
+            const code = element.innerText
+                .replace(/&nbsp;/g, ' ')
+                .replace(/&lt;/g, '<')
+                .replace(/&gt;/g, '>');
+            
+            navigator.clipboard.writeText(code).then(() => {
+                const originalText = element.innerText;
+                element.innerText = '✓ 已复制！';
+                setTimeout(() => {
+                    element.innerText = originalText;
+                }, 1000);
+            });
+        }
+
+        // 复制所有代码
+        function copyAllCode() {
+            const codes = [];
+            document.querySelectorAll('.card-code').forEach(el => {
+                codes.push(el.innerText.replace(/&nbsp;/g, ' ').replace(/&lt;/g, '<').replace(/&gt;/g, '>'));
+            });
+            
+            navigator.clipboard.writeText(codes.join('\n\n')).then(() => {
+                alert('所有代码已复制到剪贴板！');
+            });
+        }
+
+        // 初始化
+        window.onload = function() {
+            testRegex();
+        };
+    </script>
+</body>
+</html>
