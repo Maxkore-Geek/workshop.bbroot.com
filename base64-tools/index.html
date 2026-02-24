@@ -1,0 +1,830 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔐 Base64 转换工具 - 实验工坊</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'JetBrains Mono', 'Fira Code', monospace;
+            background: #1a1a1a;
+            color: #e0e0e0;
+            line-height: 1.6;
+        }
+
+        /* 安全风格背景 */
+        .base64-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                repeating-linear-gradient(45deg, 
+                    rgba(0, 255, 255, 0.02) 0px,
+                    rgba(0, 255, 255, 0.02) 2px,
+                    transparent 2px,
+                    transparent 20px),
+                repeating-linear-gradient(-45deg,
+                    rgba(0, 255, 255, 0.02) 0px,
+                    rgba(0, 255, 255, 0.02) 2px,
+                    transparent 2px,
+                    transparent 20px);
+            z-index: -1;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 40px 20px;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* 头部 */
+        header {
+            text-align: center;
+            margin-bottom: 60px;
+            padding: 40px 0;
+            border-bottom: 2px solid #00ffff;
+        }
+
+        h1 {
+            font-size: 3.5rem;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            color: #00ffff;
+            text-shadow: 0 0 10px rgba(0, 255, 255, 0.3);
+            margin-bottom: 15px;
+        }
+
+        .subtitle {
+            font-size: 1.2rem;
+            color: #888;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .subtitle span {
+            color: #00ffff;
+            background: rgba(0, 255, 255, 0.1);
+            padding: 4px 12px;
+            border-radius: 20px;
+        }
+
+        /* 返回链接 */
+        .back-link {
+            display: inline-block;
+            margin-bottom: 30px;
+            color: #888;
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        .back-link:hover {
+            color: #00ffff;
+        }
+
+        /* 工具网格 */
+        .tools-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(600px, 1fr));
+            gap: 30px;
+            margin: 50px 0;
+        }
+
+        .tool-card {
+            background: rgba(20, 20, 20, 0.95);
+            border: 1px solid #333;
+            border-radius: 16px;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+        }
+
+        .tool-card:hover {
+            transform: translateY(-5px);
+            border-color: #00ffff;
+            box-shadow: 0 10px 30px rgba(0, 255, 255, 0.2);
+        }
+
+        .card-header {
+            padding: 20px;
+            border-bottom: 1px solid #333;
+            background: linear-gradient(90deg, rgba(0,255,255,0.1), transparent);
+        }
+
+        .card-title {
+            font-size: 1.6rem;
+            color: #00ffff;
+            margin-bottom: 10px;
+        }
+
+        .card-tags {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .card-tag {
+            background: #2a2a2a;
+            color: #00ffff;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            border: 1px solid #333;
+        }
+
+        .card-body {
+            padding: 20px;
+        }
+
+        /* 转换器区域 */
+        .converter-area {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .input-group label {
+            min-width: 80px;
+            color: #00ffff;
+        }
+
+        .input-group input,
+        .input-group select,
+        .input-group textarea {
+            flex: 1;
+            background: #2a2a2a;
+            border: 1px solid #333;
+            color: #fff;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .input-group textarea {
+            min-height: 150px;
+            resize: vertical;
+        }
+
+        .input-group input:focus,
+        .input-group select:focus,
+        .input-group textarea:focus {
+            outline: none;
+            border-color: #00ffff;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin: 20px 0;
+        }
+
+        .action-btn {
+            background: transparent;
+            border: 2px solid #00ffff;
+            color: #00ffff;
+            padding: 12px 30px;
+            font-size: 1rem;
+            font-weight: bold;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .action-btn:hover {
+            background: #00ffff;
+            color: #1a1a1a;
+        }
+
+        .action-btn.primary {
+            background: #00ffff;
+            color: #1a1a1a;
+        }
+
+        .action-btn.primary:hover {
+            background: transparent;
+            color: #00ffff;
+        }
+
+        .result-area {
+            background: #2a2a2a;
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 20px;
+            min-height: 150px;
+            font-family: 'JetBrains Mono', monospace;
+            word-break: break-all;
+            position: relative;
+        }
+
+        .result-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            color: #00ffff;
+        }
+
+        .copy-btn {
+            background: #2a2a2a;
+            border: 1px solid #00ffff;
+            color: #00ffff;
+            padding: 5px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+        }
+
+        .copy-btn:hover {
+            background: #00ffff;
+            color: #1a1a1a;
+        }
+
+        /* 图片预览 */
+        .image-preview {
+            max-width: 300px;
+            max-height: 200px;
+            margin: 20px auto;
+            border: 1px solid #333;
+            border-radius: 8px;
+            overflow: hidden;
+            display: none;
+        }
+
+        .image-preview img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        /* 文件上传 */
+        .file-upload {
+            border: 2px dashed #00ffff;
+            border-radius: 8px;
+            padding: 40px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .file-upload:hover {
+            background: rgba(0, 255, 255, 0.1);
+        }
+
+        .file-upload input {
+            display: none;
+        }
+
+        .file-info {
+            margin-top: 10px;
+            color: #888;
+        }
+
+        /* 示例数据 */
+        .examples-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .example-item {
+            background: #2a2a2a;
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 10px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .example-item:hover {
+            border-color: #00ffff;
+            transform: translateY(-2px);
+        }
+
+        .card-footer {
+            padding: 20px;
+            border-top: 1px solid #333;
+        }
+
+        .card-desc {
+            color: #aaa;
+            font-size: 0.9rem;
+            margin-bottom: 10px;
+        }
+
+        .card-code {
+            background: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 15px;
+            font-family: monospace;
+            font-size: 0.8rem;
+            color: #00ffff;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .card-code:hover {
+            border-color: #00ffff;
+            background: #222;
+        }
+
+        footer {
+            margin-top: 80px;
+            padding: 30px 0;
+            text-align: center;
+            border-top: 1px solid #333;
+            color: #666;
+        }
+
+        .footer-links a {
+            color: #888;
+            text-decoration: none;
+            margin: 0 10px;
+            transition: color 0.3s ease;
+        }
+
+        .footer-links a:hover {
+            color: #00ffff;
+        }
+
+        .error-message {
+            color: #ff4444;
+            padding: 10px;
+            background: rgba(255, 68, 68, 0.1);
+            border: 1px solid #ff4444;
+            border-radius: 8px;
+            margin-top: 10px;
+        }
+
+        .success-message {
+            color: #00ff80;
+            padding: 10px;
+            background: rgba(0, 255, 128, 0.1);
+            border: 1px solid #00ff80;
+            border-radius: 8px;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="base64-bg"></div>
+    
+    <div class="container">
+        <a href="https://workshop.bbroot.com/" class="back-link">← 返回实验工坊</a>
+        
+        <header>
+            <h1>🔐 Base64 转换工具</h1>
+            <div class="subtitle">
+                <span>Base64 Tools</span> · 编码 · 解码 · 图片 · 文件
+            </div>
+        </header>
+
+        <!-- 工具网格 -->
+        <div class="tools-grid">
+            <!-- 工具1: 文本 Base64 转换 -->
+            <div class="tool-card">
+                <div class="card-header">
+                    <div class="card-title">📝 文本 Base64 转换</div>
+                    <div class="card-tags">
+                        <span class="card-tag">编码</span>
+                        <span class="card-tag">解码</span>
+                        <span class="card-tag">UTF-8</span>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="converter-area">
+                        <div class="input-group">
+                            <label>输入文本</label>
+                            <textarea id="textInput" placeholder="输入要编码的文本...">Hello, 模速空间!</textarea>
+                        </div>
+                        
+                        <div class="button-group">
+                            <button class="action-btn" onclick="encodeText()">⬇️ 编码为 Base64</button>
+                            <button class="action-btn" onclick="decodeText()">⬆️ 解码 Base64</button>
+                            <button class="action-btn" onclick="clearText()">🗑️ 清空</button>
+                        </div>
+
+                        <div class="result-area">
+                            <div class="result-header">
+                                <span>Base64 结果</span>
+                                <button class="copy-btn" onclick="copyResult('textResult')">📋 复制</button>
+                            </div>
+                            <div id="textResult" style="word-break: break-all;">SGVsbG8sIOaooeOmr+epuumXnOaMh+WbvQ==</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <div class="card-desc">将文本转换为 Base64 编码，或将 Base64 解码为原文。</div>
+                    <div class="card-code" onclick="copyCode(this)">
+                        btoa('Hello')  // 编码
+                        atob('SGVsbG8=') // 解码
+                    </div>
+                </div>
+            </div>
+
+            <!-- 工具2: 图片 Base64 转换 -->
+            <div class="tool-card">
+                <div class="card-header">
+                    <div class="card-title">🖼️ 图片 Base64 转换</div>
+                    <div class="card-tags">
+                        <span class="card-tag">图片</span>
+                        <span class="card-tag">DataURL</span>
+                        <span class="card-tag">预览</span>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="converter-area">
+                        <div class="file-upload" onclick="document.getElementById('imageInput').click()">
+                            <input type="file" id="imageInput" accept="image/*" onchange="handleImageUpload(event)">
+                            <div>📁 点击选择图片或拖拽上传</div>
+                            <div class="file-info" id="imageFileInfo">支持 JPG、PNG、GIF、SVG</div>
+                        </div>
+
+                        <div class="image-preview" id="imagePreview">
+                            <img id="previewImg" src="" alt="预览">
+                        </div>
+
+                        <div class="result-area" style="margin-top: 20px;">
+                            <div class="result-header">
+                                <span>Base64 DataURL</span>
+                                <button class="copy-btn" onclick="copyResult('imageResult')">📋 复制</button>
+                            </div>
+                            <div id="imageResult" style="word-break: break-all; font-size: 0.8rem;">选择图片后自动生成</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <div class="card-desc">将图片转换为 Base64 DataURL，可直接用于 img 标签。</div>
+                    <div class="card-code" onclick="copyCode(this)">
+                        &lt;img src="data:image/png;base64,..."&gt;
+                    </div>
+                </div>
+            </div>
+
+            <!-- 工具3: 文件 Base64 转换 -->
+            <div class="tool-card">
+                <div class="card-header">
+                    <div class="card-title">📦 文件 Base64 转换</div>
+                    <div class="card-tags">
+                        <span class="card-tag">文件</span>
+                        <span class="card-tag">二进制</span>
+                        <span class="card-tag">下载</span>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="converter-area">
+                        <div class="file-upload" onclick="document.getElementById('fileInput').click()">
+                            <input type="file" id="fileInput" onchange="handleFileUpload(event)">
+                            <div>📁 选择任意文件</div>
+                            <div class="file-info" id="fileFileInfo">支持任何格式</div>
+                        </div>
+
+                        <div class="button-group">
+                            <button class="action-btn" onclick="encodeFile()">🔐 编码为 Base64</button>
+                            <button class="action-btn" onclick="downloadFromBase64()">💾 下载为文件</button>
+                        </div>
+
+                        <div class="result-area">
+                            <div class="result-header">
+                                <span>Base64 结果</span>
+                                <button class="copy-btn" onclick="copyResult('fileResult')">📋 复制</button>
+                            </div>
+                            <div id="fileResult" style="word-break: break-all; font-size: 0.8rem;">选择文件后编码</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <div class="card-desc">将任意文件转换为 Base64，或从 Base64 还原文件。</div>
+                    <div class="card-code" onclick="copyCode(this)">
+                        const base64 = btoa(String.fromCharCode(...bytes));
+                    </div>
+                </div>
+            </div>
+
+            <!-- 工具4: 快速示例和工具 -->
+            <div class="tool-card">
+                <div class="card-header">
+                    <div class="card-title">⚡ 快速示例</div>
+                    <div class="card-tags">
+                        <span class="card-tag">示例</span>
+                        <span class="card-tag">测试</span>
+                        <span class="card-tag">工具</span>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="examples-grid">
+                        <div class="example-item" onclick="loadExample('hello')">
+                            <div>👋 Hello World</div>
+                        </div>
+                        <div class="example-item" onclick="loadExample('chinese')">
+                            <div>🇨🇳 中文测试</div>
+                        </div>
+                        <div class="example-item" onclick="loadExample('json')">
+                            <div>📋 JSON数据</div>
+                        </div>
+                        <div class="example-item" onclick="loadExample('url')">
+                            <div>🔗 URL编码</div>
+                        </div>
+                    </div>
+
+                    <div style="margin-top: 20px;">
+                        <div class="input-group">
+                            <label>URL 安全 Base64</label>
+                            <input type="text" id="urlSafeInput" placeholder="输入 Base64">
+                        </div>
+                        <div class="button-group">
+                            <button class="action-btn" onclick="toUrlSafe()">🔒 转为 URL 安全</button>
+                            <button class="action-btn" onclick="fromUrlSafe()">🔓 转回标准</button>
+                        </div>
+                        <div class="result-area" style="margin-top: 10px;">
+                            <div id="urlSafeResult"></div>
+                        </div>
+                    </div>
+
+                    <div style="margin-top: 20px;">
+                        <div class="input-group">
+                            <label>Base64 长度</label>
+                            <input type="text" id="lengthInput" placeholder="输入 Base64">
+                        </div>
+                        <button class="action-btn" onclick="calculateLength()">📏 计算长度</button>
+                        <div id="lengthResult" style="margin-top: 10px; color: #00ffff;"></div>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <div class="card-desc">Base64 相关实用工具和示例。</div>
+                    <div class="card-code" onclick="copyCode(this)">
+                        // URL 安全的 Base64
+                        base64.replace(/\+/g, '-').replace(/\//g, '_');
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Base64 知识区 -->
+        <div style="background: rgba(0,255,255,0.05); border-radius: 16px; padding: 30px; margin: 40px 0;">
+            <h3 style="color: #00ffff; margin-bottom: 20px;">📚 Base64 小知识</h3>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;">
+                <div>
+                    <div style="color: #00ffff; font-weight: bold; margin-bottom: 10px;">🔤 字符集</div>
+                    <div style="color: #aaa; font-family: monospace;">A-Z a-z 0-9 + / =</div>
+                </div>
+                <div>
+                    <div style="color: #00ffff; font-weight: bold; margin-bottom: 10px;">📊 编码原理</div>
+                    <div style="color: #aaa;">每 3 字节（24位）分成 4 组，每组 6 位</div>
+                </div>
+                <div>
+                    <div style="color: #00ffff; font-weight: bold; margin-bottom: 10px;">⚠️ 特点</div>
+                    <div style="color: #aaa;">体积增加约 33%，适合文本传输</div>
+                </div>
+            </div>
+        </div>
+
+        <footer>
+            <p>© 2026 Maxkore · Base64 转换工具</p>
+            <div class="footer-links">
+                <a href="https://workshop.bbroot.com/">← 返回工坊</a>
+                <a href="#" onclick="copyAllCode()">📋 复制所有代码</a>
+                <a href="https://developer.mozilla.org/zh-CN/docs/Web/API/Window/btoa" target="_blank">📚 MDN btoa()</a>
+                <a href="https://developer.mozilla.org/zh-CN/docs/Web/API/Window/atob" target="_blank">📚 MDN atob()</a>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        // 文本编码
+        function encodeText() {
+            const input = document.getElementById('textInput').value;
+            try {
+                const encoded = btoa(unescape(encodeURIComponent(input)));
+                document.getElementById('textResult').innerText = encoded;
+                showSuccess('编码成功');
+            } catch (e) {
+                showError('编码失败：' + e.message);
+            }
+        }
+
+        // 文本解码
+        function decodeText() {
+            const input = document.getElementById('textInput').value;
+            try {
+                const decoded = decodeURIComponent(escape(atob(input)));
+                document.getElementById('textResult').innerText = decoded;
+                showSuccess('解码成功');
+            } catch (e) {
+                showError('解码失败：无效的 Base64 字符串');
+            }
+        }
+
+        // 清空文本
+        function clearText() {
+            document.getElementById('textInput').value = '';
+            document.getElementById('textResult').innerText = '';
+        }
+
+        // 图片上传处理
+        function handleImageUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            document.getElementById('imageFileInfo').innerText = `📄 ${file.name} (${formatFileSize(file.size)})`;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const base64 = e.target.result;
+                document.getElementById('imageResult').innerText = base64;
+                document.getElementById('previewImg').src = base64;
+                document.getElementById('imagePreview').style.display = 'block';
+                showSuccess('图片转换成功');
+            };
+            reader.readAsDataURL(file);
+        }
+
+        // 文件上传处理
+        let currentFile = null;
+        let currentBase64 = '';
+
+        function handleFileUpload(event) {
+            currentFile = event.target.files[0];
+            if (!currentFile) return;
+
+            document.getElementById('fileFileInfo').innerText = `📄 ${currentFile.name} (${formatFileSize(currentFile.size)})`;
+        }
+
+        function encodeFile() {
+            if (!currentFile) {
+                showError('请先选择文件');
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                currentBase64 = e.target.result.split(',')[1] || e.target.result;
+                document.getElementById('fileResult').innerText = currentBase64;
+                showSuccess('文件编码成功');
+            };
+            reader.readAsDataURL(currentFile);
+        }
+
+        function downloadFromBase64() {
+            const base64 = document.getElementById('fileResult').innerText;
+            if (!base64 || base64 === '选择文件后编码') {
+                showError('没有可下载的数据');
+                return;
+            }
+
+            try {
+                const byteCharacters = atob(base64);
+                const byteNumbers = new Array(byteCharacters.length);
+                for (let i = 0; i < byteCharacters.length; i++) {
+                    byteNumbers[i] = byteCharacters.charCodeAt(i);
+                }
+                const byteArray = new Uint8Array(byteNumbers);
+                const blob = new Blob([byteArray]);
+                
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = currentFile ? currentFile.name : 'download.bin';
+                a.click();
+                URL.revokeObjectURL(url);
+                
+                showSuccess('文件下载成功');
+            } catch (e) {
+                showError('无效的 Base64 数据');
+            }
+        }
+
+        // 加载示例
+        function loadExample(type) {
+            const examples = {
+                hello: 'Hello, World!',
+                chinese: '你好，模速空间！',
+                json: JSON.stringify({name: 'Maxkore', age: 18}, null, 2),
+                url: 'https://workshop.bbroot.com/'
+            };
+            
+            document.getElementById('textInput').value = examples[type];
+            encodeText();
+        }
+
+        // URL 安全转换
+        function toUrlSafe() {
+            const input = document.getElementById('urlSafeInput').value;
+            const safe = input.replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
+            document.getElementById('urlSafeResult').innerText = safe;
+        }
+
+        function fromUrlSafe() {
+            const input = document.getElementById('urlSafeInput').value;
+            let standard = input.replace(/-/g, '+').replace(/_/g, '/');
+            while (standard.length % 4) {
+                standard += '=';
+            }
+            document.getElementById('urlSafeResult').innerText = standard;
+        }
+
+        // 计算长度
+        function calculateLength() {
+            const input = document.getElementById('lengthInput').value;
+            if (!input) return;
+            
+            let originalLength = 0;
+            try {
+                const decoded = atob(input);
+                originalLength = decoded.length;
+            } catch (e) {
+                // 不是有效 Base64
+            }
+            
+            document.getElementById('lengthResult').innerHTML = `
+                Base64 长度: ${input.length} 字符<br>
+                原始数据长度: ${originalLength} 字节<br>
+                体积增加: ${((input.length / originalLength - 1) * 100).toFixed(1)}%
+            `;
+        }
+
+        // 复制结果
+        function copyResult(elementId) {
+            const text = document.getElementById(elementId).innerText;
+            navigator.clipboard.writeText(text).then(() => {
+                showSuccess('已复制到剪贴板');
+            });
+        }
+
+        // 格式化文件大小
+        function formatFileSize(bytes) {
+            if (bytes < 1024) return bytes + ' B';
+            if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(2) + ' KB';
+            return (bytes / (1024 * 1024)).toFixed(2) + ' MB';
+        }
+
+        // 显示错误
+        function showError(message) {
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'error-message';
+            errorDiv.innerText = message;
+            document.querySelector('.container').insertBefore(errorDiv, document.querySelector('footer'));
+            setTimeout(() => errorDiv.remove(), 3000);
+        }
+
+        // 显示成功
+        function showSuccess(message) {
+            const successDiv = document.createElement('div');
+            successDiv.className = 'success-message';
+            successDiv.innerText = '✅ ' + message;
+            document.querySelector('.container').insertBefore(successDiv, document.querySelector('footer'));
+            setTimeout(() => successDiv.remove(), 2000);
+        }
+
+        // 复制代码
+        function copyCode(element) {
+            const code = element.innerText
+                .replace(/&nbsp;/g, ' ')
+                .replace(/&lt;/g, '<')
+                .replace(/&gt;/g, '>');
+            
+            navigator.clipboard.writeText(code).then(() => {
+                const originalText = element.innerText;
+                element.innerText = '✓ 已复制！';
+                setTimeout(() => {
+                    element.innerText = originalText;
+                }, 1000);
+            });
+        }
+
+        // 复制所有代码
+        function copyAllCode() {
+            const codes = [];
+            document.querySelectorAll('.card-code').forEach(el => {
+                codes.push(el.innerText.replace(/&nbsp;/g, ' ').replace(/&lt;/g, '<').replace(/&gt;/g, '>'));
+            });
+            
+            navigator.clipboard.writeText(codes.join('\n\n')).then(() => {
+                alert('所有代码已复制到剪贴板！');
+            });
+        }
+    </script>
+</body>
+</html>
