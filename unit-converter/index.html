@@ -1,0 +1,941 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>📏 CSS 单位转换器 - 实验工坊</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'JetBrains Mono', 'Fira Code', monospace;
+            background: #1a1a1a;
+            color: #e0e0e0;
+            line-height: 1.6;
+        }
+
+        /* 科技感背景 */
+        .unit-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                linear-gradient(90deg, rgba(0, 255, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(0deg, rgba(0, 255, 255, 0.03) 1px, transparent 1px);
+            background-size: 50px 50px;
+            z-index: -1;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 20px;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* 头部 */
+        header {
+            text-align: center;
+            margin-bottom: 60px;
+            padding: 40px 0;
+            border-bottom: 2px solid #00ffff;
+        }
+
+        h1 {
+            font-size: 3.5rem;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            color: #00ffff;
+            text-shadow: 0 0 10px rgba(0, 255, 255, 0.3);
+            margin-bottom: 15px;
+        }
+
+        .subtitle {
+            font-size: 1.2rem;
+            color: #888;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .subtitle span {
+            color: #00ffff;
+            background: rgba(0, 255, 255, 0.1);
+            padding: 4px 12px;
+            border-radius: 20px;
+        }
+
+        /* 返回链接 */
+        .back-link {
+            display: inline-block;
+            margin-bottom: 30px;
+            color: #888;
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        .back-link:hover {
+            color: #00ffff;
+        }
+
+        /* 根字体大小设置 */
+        .root-font-size {
+            background: rgba(0, 255, 255, 0.05);
+            border: 1px solid #00ffff33;
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 30px;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .root-font-size label {
+            color: #00ffff;
+            font-size: 1.1rem;
+        }
+
+        .root-font-size input {
+            background: #2a2a2a;
+            border: 1px solid #00ffff33;
+            color: #fff;
+            padding: 10px 15px;
+            border-radius: 8px;
+            font-size: 1rem;
+            width: 150px;
+        }
+
+        .root-font-size input:focus {
+            outline: none;
+            border-color: #00ffff;
+        }
+
+        .root-font-size .note {
+            color: #888;
+            font-size: 0.9rem;
+            margin-left: auto;
+        }
+
+        /* 转换器网格 */
+        .converter-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 30px;
+            margin: 50px 0;
+        }
+
+        .converter-card {
+            background: rgba(20, 20, 20, 0.9);
+            border: 1px solid #333;
+            border-radius: 16px;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .converter-card:hover {
+            transform: translateY(-5px);
+            border-color: #00ffff;
+            box-shadow: 0 10px 30px rgba(0, 255, 255, 0.2);
+        }
+
+        .card-header {
+            padding: 20px;
+            border-bottom: 1px solid #333;
+            background: linear-gradient(90deg, rgba(0,255,255,0.1), transparent);
+        }
+
+        .card-title {
+            font-size: 1.6rem;
+            color: #00ffff;
+            margin-bottom: 10px;
+        }
+
+        .card-tags {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .card-tag {
+            background: #2a2a2a;
+            color: #00ffff;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            border: 1px solid #333;
+        }
+
+        .card-body {
+            padding: 20px;
+        }
+
+        /* 转换器样式 */
+        .converter {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .input-group label {
+            min-width: 60px;
+            color: #888;
+        }
+
+        .input-group input {
+            flex: 1;
+            background: #2a2a2a;
+            border: 1px solid #333;
+            color: #fff;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-family: monospace;
+        }
+
+        .input-group input:focus {
+            outline: none;
+            border-color: #00ffff;
+        }
+
+        .input-group select {
+            background: #2a2a2a;
+            border: 1px solid #333;
+            color: #fff;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 1rem;
+            cursor: pointer;
+        }
+
+        .input-group select:focus {
+            outline: none;
+            border-color: #00ffff;
+        }
+
+        .result-group {
+            background: #2a2a2a;
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .result-label {
+            color: #888;
+        }
+
+        .result-value {
+            color: #00ffff;
+            font-size: 1.3rem;
+            font-weight: bold;
+            font-family: monospace;
+        }
+
+        .unit-preview {
+            margin-top: 20px;
+            padding: 20px;
+            background: #2a2a2a;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .preview-box {
+            background: linear-gradient(135deg, #00ffff22, #00ffff11);
+            border: 1px solid #00ffff33;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #00ffff;
+            transition: all 0.3s ease;
+            margin: 0 auto;
+        }
+
+        .preview-text {
+            margin-top: 10px;
+            color: #888;
+            font-size: 0.9rem;
+        }
+
+        /* 常用值参考 */
+        .reference-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        .reference-table th {
+            text-align: left;
+            padding: 10px;
+            color: #00ffff;
+            border-bottom: 1px solid #00ffff33;
+        }
+
+        .reference-table td {
+            padding: 8px 10px;
+            color: #aaa;
+            border-bottom: 1px solid #333;
+        }
+
+        .reference-table tr:hover td {
+            color: #fff;
+            background: rgba(0,255,255,0.05);
+        }
+
+        .reference-table .value {
+            color: #00ffff;
+            font-family: monospace;
+        }
+
+        .copy-btn {
+            background: #2a2a2a;
+            border: 1px solid #333;
+            color: #888;
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            transition: all 0.3s ease;
+        }
+
+        .copy-btn:hover {
+            border-color: #00ffff;
+            color: #00ffff;
+        }
+
+        .card-footer {
+            padding: 20px;
+            border-top: 1px solid #333;
+        }
+
+        .card-desc {
+            color: #aaa;
+            font-size: 0.9rem;
+            margin-bottom: 10px;
+        }
+
+        .card-code {
+            background: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 15px;
+            font-family: monospace;
+            font-size: 0.8rem;
+            color: #00ffff;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .card-code:hover {
+            border-color: #00ffff;
+            background: #222;
+        }
+
+        .load-more {
+            text-align: center;
+            margin: 50px 0;
+        }
+
+        .load-more button {
+            background: transparent;
+            border: 2px solid #00ffff;
+            color: #00ffff;
+            padding: 15px 40px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            border-radius: 40px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .load-more button:hover {
+            background: #00ffff;
+            color: #1a1a1a;
+        }
+
+        footer {
+            margin-top: 80px;
+            padding: 30px 0;
+            text-align: center;
+            border-top: 1px solid #333;
+            color: #666;
+        }
+
+        .footer-links a {
+            color: #888;
+            text-decoration: none;
+            margin: 0 10px;
+            transition: color 0.3s ease;
+        }
+
+        .footer-links a:hover {
+            color: #00ffff;
+        }
+
+        @media (max-width: 768px) {
+            h1 { font-size: 2.5rem; }
+        }
+    </style>
+</head>
+<body>
+    <div class="unit-bg"></div>
+    
+    <div class="container">
+        <a href="https://workshop.bbroot.com/" class="back-link">← 返回实验工坊</a>
+        
+        <header>
+            <h1>📏 CSS 单位转换器</h1>
+            <div class="subtitle">
+                <span>Unit Converter</span> · px · rem · em · vw · 响应式设计必备
+            </div>
+        </header>
+
+        <!-- 根字体大小设置 -->
+        <div class="root-font-size">
+            <label>📐 根字体大小 (1rem = )</label>
+            <input type="number" id="rootFontSize" value="16" min="1" max="32" step="1" oninput="updateAllConversions()">
+            <span style="color: #00ffff;">px</span>
+            <span class="note">浏览器默认值为 16px，可根据设计稿调整</span>
+        </div>
+
+        <!-- 转换器网格 -->
+        <div class="converter-grid">
+            <!-- 转换器 1: px ↔ rem -->
+            <div class="converter-card">
+                <div class="card-header">
+                    <div class="card-title">px ↔ rem</div>
+                    <div class="card-tags">
+                        <span class="card-tag">相对单位</span>
+                        <span class="card-tag">根元素</span>
+                        <span class="card-tag">响应式</span>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="converter">
+                        <div class="input-group">
+                            <label>px</label>
+                            <input type="number" id="pxToRem" value="16" min="0" step="0.1" oninput="convertPxToRem()">
+                        </div>
+                        <div class="result-group">
+                            <span class="result-label">=</span>
+                            <span class="result-value" id="remResult">1 rem</span>
+                            <button class="copy-btn" onclick="copyToClipboard('remResult')">复制</button>
+                        </div>
+                        <div class="input-group">
+                            <label>rem</label>
+                            <input type="number" id="remToPx" value="1" min="0" step="0.1" oninput="convertRemToPx()">
+                        </div>
+                        <div class="result-group">
+                            <span class="result-label">=</span>
+                            <span class="result-value" id="pxResult">16 px</span>
+                            <button class="copy-btn" onclick="copyToClipboard('pxResult')">复制</button>
+                        </div>
+                        <div class="unit-preview">
+                            <div class="preview-box" id="pxPreview" style="width: 16px; height: 16px;">&nbsp;</div>
+                            <div class="preview-text">当前 1rem = 16px 的视觉预览</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <div class="card-desc">rem 相对于根元素 (&lt;html&gt;) 的字体大小，适合响应式布局。</div>
+                    <div class="card-code" onclick="copyCode(this)">
+                        /* px 转 rem */
+                        rem = px / root-font-size
+                    </div>
+                </div>
+            </div>
+
+            <!-- 转换器 2: px ↔ em -->
+            <div class="converter-card">
+                <div class="card-header">
+                    <div class="card-title">px ↔ em</div>
+                    <div class="card-tags">
+                        <span class="card-tag">相对单位</span>
+                        <span class="card-tag">父元素</span>
+                        <span class="card-tag">继承</span>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="converter">
+                        <div class="input-group">
+                            <label>父元素 font-size</label>
+                            <input type="number" id="parentFontSize" value="16" min="1" step="1" oninput="updateEmConversions()">
+                            <span style="color: #00ffff;">px</span>
+                        </div>
+                        <div class="input-group">
+                            <label>px</label>
+                            <input type="number" id="pxToEm" value="16" min="0" step="0.1" oninput="convertPxToEm()">
+                        </div>
+                        <div class="result-group">
+                            <span class="result-label">=</span>
+                            <span class="result-value" id="emResult">1 em</span>
+                            <button class="copy-btn" onclick="copyToClipboard('emResult')">复制</button>
+                        </div>
+                        <div class="input-group">
+                            <label>em</label>
+                            <input type="number" id="emToPx" value="1" min="0" step="0.1" oninput="convertEmToPx()">
+                        </div>
+                        <div class="result-group">
+                            <span class="result-label">=</span>
+                            <span class="result-value" id="pxFromEmResult">16 px</span>
+                            <button class="copy-btn" onclick="copyToClipboard('pxFromEmResult')">复制</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <div class="card-desc">em 相对于当前元素的父元素字体大小，常用于模块内缩放。</div>
+                    <div class="card-code" onclick="copyCode(this)">
+                        /* px 转 em */
+                        em = px / parent-font-size
+                    </div>
+                </div>
+            </div>
+
+            <!-- 转换器 3: px ↔ vw/vh -->
+            <div class="converter-card">
+                <div class="card-header">
+                    <div class="card-title">px ↔ vw/vh</div>
+                    <div class="card-tags">
+                        <span class="card-tag">视口单位</span>
+                        <span class="card-tag">响应式</span>
+                        <span class="card-tag">全屏</span>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="converter">
+                        <div class="input-group">
+                            <label>视口宽度</label>
+                            <input type="number" id="viewportWidth" value="1920" min="320" step="1" oninput="updateVwConversions()">
+                            <span style="color: #00ffff;">px</span>
+                        </div>
+                        <div class="input-group">
+                            <label>px</label>
+                            <input type="number" id="pxToVw" value="192" min="0" step="1" oninput="convertPxToVw()">
+                        </div>
+                        <div class="result-group">
+                            <span class="result-label">=</span>
+                            <span class="result-value" id="vwResult">10 vw</span>
+                            <button class="copy-btn" onclick="copyToClipboard('vwResult')">复制</button>
+                        </div>
+                        <div class="input-group">
+                            <label>vw</label>
+                            <input type="number" id="vwToPx" value="10" min="0" step="0.1" oninput="convertVwToPx()">
+                        </div>
+                        <div class="result-group">
+                            <span class="result-label">=</span>
+                            <span class="result-value" id="pxFromVwResult">192 px</span>
+                            <button class="copy-btn" onclick="copyToClipboard('pxFromVwResult')">复制</button>
+                        </div>
+                        <div class="input-group">
+                            <label>视口高度</label>
+                            <input type="number" id="viewportHeight" value="1080" min="320" step="1" oninput="updateVhConversions()">
+                            <span style="color: #00ffff;">px</span>
+                        </div>
+                        <div class="input-group">
+                            <label>vh</label>
+                            <input type="number" id="vhToPx" value="10" min="0" step="0.1" oninput="convertVhToPx()">
+                        </div>
+                        <div class="result-group">
+                            <span class="result-label">=</span>
+                            <span class="result-value" id="pxFromVhResult">108 px</span>
+                            <button class="copy-btn" onclick="copyToClipboard('pxFromVhResult')">复制</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <div class="card-desc">vw/vh 相对于视口宽度/高度的 1%，适合全屏和响应式设计。</div>
+                    <div class="card-code" onclick="copyCode(this)">
+                        /* px 转 vw */
+                        vw = (px / viewport-width) * 100
+                    </div>
+                </div>
+            </div>
+
+            <!-- 转换器 4: 常用值速查表 -->
+            <div class="converter-card">
+                <div class="card-header">
+                    <div class="card-title">📊 常用值速查表</div>
+                    <div class="card-tags">
+                        <span class="card-tag">参考</span>
+                        <span class="card-tag">快速查询</span>
+                        <span class="card-tag">最佳实践</span>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <table class="reference-table">
+                        <tr>
+                            <th>px</th>
+                            <th>rem (16px)</th>
+                            <th>rem (14px)</th>
+                        </tr>
+                        <tr>
+                            <td>8px</td>
+                            <td class="value">0.5rem</td>
+                            <td class="value">0.571rem</td>
+                        </tr>
+                        <tr>
+                            <td>10px</td>
+                            <td class="value">0.625rem</td>
+                            <td class="value">0.714rem</td>
+                        </tr>
+                        <tr>
+                            <td>12px</td>
+                            <td class="value">0.75rem</td>
+                            <td class="value">0.857rem</td>
+                        </tr>
+                        <tr>
+                            <td>14px</td>
+                            <td class="value">0.875rem</td>
+                            <td class="value">1rem</td>
+                        </tr>
+                        <tr>
+                            <td>16px</td>
+                            <td class="value">1rem</td>
+                            <td class="value">1.143rem</td>
+                        </tr>
+                        <tr>
+                            <td>18px</td>
+                            <td class="value">1.125rem</td>
+                            <td class="value">1.286rem</td>
+                        </tr>
+                        <tr>
+                            <td>20px</td>
+                            <td class="value">1.25rem</td>
+                            <td class="value">1.429rem</td>
+                        </tr>
+                        <tr>
+                            <td>24px</td>
+                            <td class="value">1.5rem</td>
+                            <td class="value">1.714rem</td>
+                        </tr>
+                        <tr>
+                            <td>32px</td>
+                            <td class="value">2rem</td>
+                            <td class="value">2.286rem</td>
+                        </tr>
+                    </table>
+                </div>
+                <div class="card-footer">
+                    <div class="card-desc">常用字体大小在不同根字体下的 rem 值对照。</div>
+                    <div class="card-code" onclick="copyCode(this)">
+                        /* 常用 rem 值 */
+                        h1: 2rem (32px)
+                        h2: 1.5rem (24px)
+                        p: 1rem (16px)
+                    </div>
+                </div>
+            </div>
+
+            <!-- 转换器 5: 百分比转换器 -->
+            <div class="converter-card">
+                <div class="card-header">
+                    <div class="card-title">📈 百分比转换器</div>
+                    <div class="card-tags">
+                        <span class="card-tag">百分比</span>
+                        <span class="card-tag">相对</span>
+                        <span class="card-tag">容器</span>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="converter">
+                        <div class="input-group">
+                            <label>容器宽度</label>
+                            <input type="number" id="containerWidth" value="1000" min="100" step="10" oninput="updatePercentConversions()">
+                            <span style="color: #00ffff;">px</span>
+                        </div>
+                        <div class="input-group">
+                            <label>px</label>
+                            <input type="number" id="pxToPercent" value="250" min="0" step="1" oninput="convertPxToPercent()">
+                        </div>
+                        <div class="result-group">
+                            <span class="result-label">=</span>
+                            <span class="result-value" id="percentResult">25 %</span>
+                            <button class="copy-btn" onclick="copyToClipboard('percentResult')">复制</button>
+                        </div>
+                        <div class="input-group">
+                            <label>%</label>
+                            <input type="number" id="percentToPx" value="25" min="0" step="1" oninput="convertPercentToPx()">
+                        </div>
+                        <div class="result-group">
+                            <span class="result-label">=</span>
+                            <span class="result-value" id="pxFromPercentResult">250 px</span>
+                            <button class="copy-btn" onclick="copyToClipboard('pxFromPercentResult')">复制</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <div class="card-desc">百分比相对于父容器的宽度/高度。</div>
+                    <div class="card-code" onclick="copyCode(this)">
+                        /* px 转 % */
+                        percent = (px / container-width) * 100
+                    </div>
+                </div>
+            </div>
+
+            <!-- 转换器 6: 响应式断点参考 -->
+            <div class="converter-card">
+                <div class="card-header">
+                    <div class="card-title">📱 响应式断点</div>
+                    <div class="card-tags">
+                        <span class="card-tag">媒体查询</span>
+                        <span class="card-tag">断点</span>
+                        <span class="card-tag">设备</span>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <table class="reference-table">
+                        <tr>
+                            <th>设备</th>
+                            <th>断点</th>
+                            <th>常用写法</th>
+                        </tr>
+                        <tr>
+                            <td>手机</td>
+                            <td class="value">&lt; 576px</td>
+                            <td>@media (max-width: 576px)</td>
+                        </tr>
+                        <tr>
+                            <td>平板</td>
+                            <td class="value">576px - 768px</td>
+                            <td>@media (min-width: 576px)</td>
+                        </tr>
+                        <tr>
+                            <td>小平板/大手机</td>
+                            <td class="value">768px - 992px</td>
+                            <td>@media (min-width: 768px)</td>
+                        </tr>
+                        <tr>
+                            <td>桌面</td>
+                            <td class="value">992px - 1200px</td>
+                            <td>@media (min-width: 992px)</td>
+                        </tr>
+                        <tr>
+                            <td>大桌面</td>
+                            <td class="value">&gt; 1200px</td>
+                            <td>@media (min-width: 1200px)</td>
+                        </tr>
+                    </table>
+                    <div style="margin-top: 20px; color: #aaa; font-size: 0.9rem;">
+                        <div>✨ 视口宽度 1920px 时：</div>
+                        <div>1vw = 19.2px</div>
+                        <div>1vh = 10.8px</div>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <div class="card-desc">常用的响应式设计断点参考。</div>
+                    <div class="card-code" onclick="copyCode(this)">
+                        @media (max-width: 768px) {<br>
+                        &nbsp;&nbsp;/* 移动端样式 */<br>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 转换技巧 -->
+        <div style="background: rgba(0,255,255,0.05); border-radius: 16px; padding: 30px; margin: 40px 0;">
+            <h3 style="color: #00ffff; margin-bottom: 20px;">💡 单位转换技巧</h3>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px;">
+                <div>
+                    <div style="color: #00ffff; font-weight: bold; margin-bottom: 10px;">rem 使用场景</div>
+                    <ul style="color: #aaa; list-style: none;">
+                        <li>• 全局字体大小</li>
+                        <li>• 间距、边距</li>
+                        <li>• 响应式布局</li>
+                    </ul>
+                </div>
+                <div>
+                    <div style="color: #00ffff; font-weight: bold; margin-bottom: 10px;">em 使用场景</div>
+                    <ul style="color: #aaa; list-style: none;">
+                        <li>• 模块内相对缩放</li>
+                        <li>• 按钮内边距</li>
+                        <li>• 组件封装</li>
+                    </ul>
+                </div>
+                <div>
+                    <div style="color: #00ffff; font-weight: bold; margin-bottom: 10px;">vw/vh 使用场景</div>
+                    <ul style="color: #aaa; list-style: none;">
+                        <li>• 全屏背景</li>
+                        <li>• 视口居中</li>
+                        <li>• 大标题</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- 加载更多 -->
+        <div class="load-more">
+            <button onclick="alert('更多单位转换工具正在赶来的路上...')">加载更多工具 ⚡</button>
+        </div>
+
+        <footer>
+            <p>© 2026 Maxkore · CSS 单位转换器</p>
+            <div class="footer-links">
+                <a href="https://workshop.bbroot.com/">← 返回工坊</a>
+                <a href="#" onclick="copyAllCode()">📋 复制所有代码</a>
+                <a href="https://developer.mozilla.org/zh-CN/docs/Learn/CSS/Building_blocks/Values_and_units" target="_blank">📚 MDN 文档</a>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        // 全局变量
+        let rootFontSize = 16;
+        let parentFontSize = 16;
+        let viewportWidth = 1920;
+        let viewportHeight = 1080;
+        let containerWidth = 1000;
+
+        // 更新所有转换
+        function updateAllConversions() {
+            rootFontSize = parseFloat(document.getElementById('rootFontSize').value) || 16;
+            convertPxToRem();
+            convertRemToPx();
+        }
+
+        // px ↔ rem 转换
+        function convertPxToRem() {
+            const px = parseFloat(document.getElementById('pxToRem').value) || 0;
+            const rem = (px / rootFontSize).toFixed(3);
+            document.getElementById('remResult').innerText = rem + ' rem';
+            document.getElementById('pxPreview').style.width = px + 'px';
+            document.getElementById('pxPreview').style.height = px + 'px';
+        }
+
+        function convertRemToPx() {
+            const rem = parseFloat(document.getElementById('remToPx').value) || 0;
+            const px = (rem * rootFontSize).toFixed(1);
+            document.getElementById('pxResult').innerText = px + ' px';
+        }
+
+        // px ↔ em 转换
+        function updateEmConversions() {
+            parentFontSize = parseFloat(document.getElementById('parentFontSize').value) || 16;
+            convertPxToEm();
+            convertEmToPx();
+        }
+
+        function convertPxToEm() {
+            const px = parseFloat(document.getElementById('pxToEm').value) || 0;
+            const em = (px / parentFontSize).toFixed(3);
+            document.getElementById('emResult').innerText = em + ' em';
+        }
+
+        function convertEmToPx() {
+            const em = parseFloat(document.getElementById('emToPx').value) || 0;
+            const px = (em * parentFontSize).toFixed(1);
+            document.getElementById('pxFromEmResult').innerText = px + ' px';
+        }
+
+        // px ↔ vw 转换
+        function updateVwConversions() {
+            viewportWidth = parseFloat(document.getElementById('viewportWidth').value) || 1920;
+            convertPxToVw();
+            convertVwToPx();
+        }
+
+        function convertPxToVw() {
+            const px = parseFloat(document.getElementById('pxToVw').value) || 0;
+            const vw = ((px / viewportWidth) * 100).toFixed(3);
+            document.getElementById('vwResult').innerText = vw + ' vw';
+        }
+
+        function convertVwToPx() {
+            const vw = parseFloat(document.getElementById('vwToPx').value) || 0;
+            const px = ((vw / 100) * viewportWidth).toFixed(1);
+            document.getElementById('pxFromVwResult').innerText = px + ' px';
+        }
+
+        // vh 转换
+        function updateVhConversions() {
+            viewportHeight = parseFloat(document.getElementById('viewportHeight').value) || 1080;
+            convertVhToPx();
+        }
+
+        function convertVhToPx() {
+            const vh = parseFloat(document.getElementById('vhToPx').value) || 0;
+            const px = ((vh / 100) * viewportHeight).toFixed(1);
+            document.getElementById('pxFromVhResult').innerText = px + ' px';
+        }
+
+        // 百分比转换
+        function updatePercentConversions() {
+            containerWidth = parseFloat(document.getElementById('containerWidth').value) || 1000;
+            convertPxToPercent();
+            convertPercentToPx();
+        }
+
+        function convertPxToPercent() {
+            const px = parseFloat(document.getElementById('pxToPercent').value) || 0;
+            const percent = ((px / containerWidth) * 100).toFixed(2);
+            document.getElementById('percentResult').innerText = percent + ' %';
+        }
+
+        function convertPercentToPx() {
+            const percent = parseFloat(document.getElementById('percentToPx').value) || 0;
+            const px = ((percent / 100) * containerWidth).toFixed(1);
+            document.getElementById('pxFromPercentResult').innerText = px + ' px';
+        }
+
+        // 复制到剪贴板
+        function copyToClipboard(elementId) {
+            const element = document.getElementById(elementId);
+            const text = element.innerText;
+            navigator.clipboard.writeText(text).then(() => {
+                alert('已复制: ' + text);
+            });
+        }
+
+        // 复制代码
+        function copyCode(element) {
+            const code = element.innerText
+                .replace(/&nbsp;/g, ' ')
+                .replace(/&lt;/g, '<')
+                .replace(/&gt;/g, '>');
+            
+            navigator.clipboard.writeText(code).then(() => {
+                const originalText = element.innerText;
+                element.innerText = '✓ 已复制！';
+                setTimeout(() => {
+                    element.innerText = originalText;
+                }, 1000);
+            });
+        }
+
+        // 复制所有代码
+        function copyAllCode() {
+            const codes = [];
+            document.querySelectorAll('.card-code').forEach(el => {
+                codes.push(el.innerText.replace(/&nbsp;/g, ' ').replace(/&lt;/g, '<').replace(/&gt;/g, '>'));
+            });
+            
+            navigator.clipboard.writeText(codes.join('\n\n')).then(() => {
+                alert('所有代码已复制到剪贴板！');
+            });
+        }
+
+        // 初始化
+        updateAllConversions();
+        updateEmConversions();
+        updateVwConversions();
+        updateVhConversions();
+        updatePercentConversions();
+    </script>
+</body>
+</html>
