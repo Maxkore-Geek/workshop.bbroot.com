@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>📊 可视化实验室 - 实验工坊</title>
+    <!-- 引入图表库 -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'JetBrains Mono', 'Fira Code', monospace;
+            background: #1a1a1a;
+            color: #e0e0e0;
+            line-height: 1.6;
+        }
+
+        /* 工业风背景 */
+        .workshop-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                linear-gradient(45deg, rgba(0, 150, 255, 0.03) 25%, transparent 25%),
+                linear-gradient(-45deg, rgba(0, 150, 255, 0.03) 25%, transparent 25%),
+                linear-gradient(45deg, transparent 75%, rgba(0, 150, 255, 0.03) 75%),
+                linear-gradient(-45deg, transparent 75%, rgba(0, 150, 255, 0.03) 75%);
+            background-size: 20px 20px;
+            background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+            z-index: -1;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 20px;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* 头部 */
+        header {
+            text-align: center;
+            margin-bottom: 60px;
+            padding: 40px 0;
+            border-bottom: 2px solid #0096ff;
+        }
+
+        h1 {
+            font-size: 3.5rem;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            color: #0096ff;
+            text-shadow: 0 0 10px rgba(0, 150, 255, 0.3);
+            margin-bottom: 15px;
+        }
+
+        .subtitle {
+            font-size: 1.2rem;
+            color: #888;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .subtitle span {
+            color: #0096ff;
+            background: rgba(0, 150, 255, 0.1);
+            padding: 4px 12px;
+            border-radius: 20px;
+        }
+
+        /* 返回链接 */
+        .back-link {
+            display: inline-block;
+            margin-bottom: 30px;
+            color: #888;
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        .back-link:hover {
+            color: #0096ff;
+        }
+
+        /* 图表网格 */
+        .viz-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+            gap: 30px;
+            margin: 50px 0;
+        }
+
+        .viz-card {
+            background: rgba(20, 20, 20, 0.9);
+            border: 1px solid #333;
+            border-radius: 16px;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .viz-card:hover {
+            transform: translateY(-5px);
+            border-color: #0096ff;
+            box-shadow: 0 10px 30px rgba(0, 150, 255, 0.2);
+        }
+
+        .viz-container {
+            height: 300px;
+            padding: 20px;
+            background: #2a2a2a;
+            position: relative;
+        }
+
+        canvas, svg {
+            width: 100%;
+            height: 100%;
+        }
+
+        .viz-info {
+            padding: 20px;
+        }
+
+        .viz-title {
+            font-size: 1.4rem;
+            color: #0096ff;
+            margin-bottom: 10px;
+        }
+
+        .viz-desc {
+            color: #aaa;
+            font-size: 0.9rem;
+            margin-bottom: 15px;
+        }
+
+        .viz-tags {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-bottom: 15px;
+        }
+
+        .viz-tag {
+            background: #2a2a2a;
+            color: #0096ff;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            border: 1px solid #333;
+        }
+
+        .viz-code {
+            background: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 15px;
+            font-family: monospace;
+            font-size: 0.8rem;
+            color: #0096ff;
+            margin-top: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .viz-code:hover {
+            border-color: #0096ff;
+            background: #222;
+        }
+
+        /* D3 特定样式 */
+        .bar {
+            fill: #0096ff;
+            transition: fill 0.3s ease;
+        }
+
+        .bar:hover {
+            fill: #00c8ff;
+        }
+
+        .axis path,
+        .axis line {
+            stroke: #666;
+        }
+
+        .axis text {
+            fill: #aaa;
+            font-size: 12px;
+        }
+
+        /* 加载更多 */
+        .load-more {
+            text-align: center;
+            margin: 50px 0;
+        }
+
+        .load-more button {
+            background: transparent;
+            border: 2px solid #0096ff;
+            color: #0096ff;
+            padding: 15px 40px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            border-radius: 40px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .load-more button:hover {
+            background: #0096ff;
+            color: #1a1a1a;
+        }
+
+        footer {
+            margin-top: 80px;
+            padding: 30px 0;
+            text-align: center;
+            border-top: 1px solid #333;
+            color: #666;
+        }
+
+        .footer-links a {
+            color: #888;
+            text-decoration: none;
+            margin: 0 10px;
+            transition: color 0.3s ease;
+        }
+
+        .footer-links a:hover {
+            color: #0096ff;
+        }
+    </style>
+</head>
+<body>
+    <div class="workshop-bg"></div>
+    
+    <div class="container">
+        <a href="https://workshop.bbroot.com/" class="back-link">← 返回实验工坊</a>
+        
+        <header>
+            <h1>📊 可视化实验室</h1>
+            <div class="subtitle">
+                <span>Data Visualization Lab</span> · 用数据讲故事
+            </div>
+        </header>
+
+        <!-- 图表网格 -->
+        <div class="viz-grid">
+            <!-- 图表1: 柱状图 (Chart.js) -->
+            <div class="viz-card">
+                <div class="viz-container">
+                    <canvas id="chart1"></canvas>
+                </div>
+                <div class="viz-info">
+                    <div class="viz-title">📊 销售数据柱状图</div>
+                    <div class="viz-tags">
+                        <span class="viz-tag">Chart.js</span>
+                        <span class="viz-tag">柱状图</span>
+                        <span class="viz-tag">响应式</span>
+                    </div>
+                    <div class="viz-desc">
+                        使用 Chart.js 创建的自适应柱状图，展示季度销售数据。
+                    </div>
+                    <div class="viz-code" onclick="copyCode(this)">
+                        new Chart(ctx, {<br>
+                        &nbsp;&nbsp;type: 'bar',<br>
+                        &nbsp;&nbsp;data: { labels: ['Q1', 'Q2', 'Q3', 'Q4'],<br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;datasets: [{ data: [65, 59, 80, 81] }]<br>
+                        &nbsp;&nbsp;}<br>
+                        });
+                    </div>
+                </div>
+            </div>
+
+            <!-- 图表2: 折线图 (Chart.js) -->
+            <div class="viz-card">
+                <div class="viz-container">
+                    <canvas id="chart2"></canvas>
+                </div>
+                <div class="viz-info">
+                    <div class="viz-title">📈 趋势分析折线图</div>
+                    <div class="viz-tags">
+                        <span class="viz-tag">Chart.js</span>
+                        <span class="viz-tag">折线图</span>
+                        <span class="viz-tag">趋势</span>
+                    </div>
+                    <div class="viz-desc">
+                        多组数据对比的折线图，适合展示趋势变化。
+                    </div>
+                    <div class="viz-code" onclick="copyCode(this)">
+                        datasets: [{<br>
+                        &nbsp;&nbsp;label: '2025', data: [28, 48, 40, 19],<br>
+                        &nbsp;&nbsp;borderColor: '#0096ff'<br>
+                        }]
+                    </div>
+                </div>
+            </div>
+
+            <!-- 图表3: 饼图 (Chart.js) -->
+            <div class="viz-card">
+                <div class="viz-container">
+                    <canvas id="chart3"></canvas>
+                </div>
+                <div class="viz-info">
+                    <div class="viz-title">🥧 占比分析饼图</div>
+                    <div class="viz-tags">
+                        <span class="viz-tag">Chart.js</span>
+                        <span class="viz-tag">饼图</span>
+                        <span class="viz-tag">占比</span>
+                    </div>
+                    <div class="viz-desc">
+                        直观展示各部分的占比情况。
+                    </div>
+                    <div class="viz-code" onclick="copyCode(this)">
+                        type: 'pie',<br>
+                        data: { labels: ['A', 'B', 'C'],<br>
+                        &nbsp;&nbsp;datasets: [{ data: [30, 50, 20] }] }
+                    </div>
+                </div>
+            </div>
+
+            <!-- 图表4: 雷达图 (Chart.js) -->
+            <div class="viz-card">
+                <div class="viz-container">
+                    <canvas id="chart4"></canvas>
+                </div>
+                <div class="viz-info">
+                    <div class="viz-title">📡 能力评估雷达图</div>
+                    <div class="viz-tags">
+                        <span class="viz-tag">Chart.js</span>
+                        <span class="viz-tag">雷达图</span>
+                        <span class="viz-tag">多维</span>
+                    </div>
+                    <div class="viz-desc">
+                        多维数据对比，适合能力评估、性能分析。
+                    </div>
+                    <div class="viz-code" onclick="copyCode(this)">
+                        type: 'radar',<br>
+                        data: { labels: ['JS', 'Python', 'CSS'],<br>
+                        &nbsp;&nbsp;datasets: [{ data: [90, 75, 85] }] }
+                    </div>
+                </div>
+            </div>
+
+            <!-- 图表5: D3 条形图 -->
+            <div class="viz-card">
+                <div class="viz-container">
+                    <svg id="d3-chart1" width="100%" height="100%"></svg>
+                </div>
+                <div class="viz-info">
+                    <div class="viz-title">📊 D3 基础条形图</div>
+                    <div class="viz-tags">
+                        <span class="viz-tag">D3.js</span>
+                        <span class="viz-tag">SVG</span>
+                        <span class="viz-tag">数据驱动</span>
+                    </div>
+                    <div class="viz-desc">
+                        使用 D3.js 创建的条形图，完全可定制。
+                    </div>
+                    <div class="viz-code" onclick="copyCode(this)">
+                        d3.select('svg')<br>
+                        &nbsp;&nbsp;.selectAll('rect')<br>
+                        &nbsp;&nbsp;.data(data)<br>
+                        &nbsp;&nbsp;.enter()...
+                    </div>
+                </div>
+            </div>
+
+            <!-- 图表6: D3 散点图 -->
+            <div class="viz-card">
+                <div class="viz-container">
+                    <svg id="d3-chart2" width="100%" height="100%"></svg>
+                </div>
+                <div class="viz-info">
+                    <div class="viz-title">⚫ D3 散点图</div>
+                    <div class="viz-tags">
+                        <span class="viz-tag">D3.js</span>
+                        <span class="viz-tag">散点图</span>
+                        <span class="viz-tag">相关性</span>
+                    </div>
+                    <div class="viz-desc">
+                        展示数据分布和相关性。
+                    </div>
+                    <div class="viz-code" onclick="copyCode(this)">
+                        d3.select('svg')<br>
+                        &nbsp;&nbsp;.selectAll('circle')<br>
+                        &nbsp;&nbsp;.data(data)<br>
+                        &nbsp;&nbsp;.enter()...
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 加载更多 -->
+        <div class="load-more">
+            <button onclick="alert('更多可视化效果正在赶来的路上...')">加载更多可视化 ⚡</button>
+        </div>
+
+        <footer>
+            <p>© 2026 Maxkore · 可视化实验室</p>
+            <div class="footer-links">
+                <a href="https://workshop.bbroot.com/">← 返回工坊</a>
+                <a href="#" onclick="copyAllCode()">📋 复制所有代码</a>
+                <a href="https://www.chartjs.org/" target="_blank">📚 Chart.js</a>
+                <a href="https://d3js.org/" target="_blank">📚 D3.js</a>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        // Chart.js 图表初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            // 柱状图
+            new Chart(document.getElementById('chart1'), {
+                type: 'bar',
+                data: {
+                    labels: ['Q1', 'Q2', 'Q3', 'Q4'],
+                    datasets: [{
+                        label: '销售额',
+                        data: [65, 59, 80, 81],
+                        backgroundColor: 'rgba(0, 150, 255, 0.5)',
+                        borderColor: '#0096ff',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { labels: { color: '#aaa' } }
+                    },
+                    scales: {
+                        y: { grid: { color: '#333' }, ticks: { color: '#aaa' } },
+                        x: { grid: { color: '#333' }, ticks: { color: '#aaa' } }
+                    }
+                }
+            });
+
+            // 折线图
+            new Chart(document.getElementById('chart2'), {
+                type: 'line',
+                data: {
+                    labels: ['Jan', 'Feb', 'Mar', 'Apr'],
+                    datasets: [
+                        {
+                            label: '2025',
+                            data: [28, 48, 40, 19],
+                            borderColor: '#0096ff',
+                            backgroundColor: 'transparent',
+                            tension: 0.4
+                        },
+                        {
+                            label: '2026',
+                            data: [35, 42, 58, 30],
+                            borderColor: '#ff6600',
+                            backgroundColor: 'transparent',
+                            tension: 0.4
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { labels: { color: '#aaa' } } },
+                    scales: {
+                        y: { grid: { color: '#333' }, ticks: { color: '#aaa' } },
+                        x: { grid: { color: '#333' }, ticks: { color: '#aaa' } }
+                    }
+                }
+            });
+
+            // 饼图
+            new Chart(document.getElementById('chart3'), {
+                type: 'pie',
+                data: {
+                    labels: ['分类 A', '分类 B', '分类 C'],
+                    datasets: [{
+                        data: [30, 50, 20],
+                        backgroundColor: ['#0096ff', '#00c8ff', '#0066cc'],
+                        borderColor: '#1a1a1a'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { labels: { color: '#aaa' } } }
+                }
+            });
+
+            // 雷达图
+            new Chart(document.getElementById('chart4'), {
+                type: 'radar',
+                data: {
+                    labels: ['JavaScript', 'Python', 'CSS', 'HTML', 'React', 'Vue'],
+                    datasets: [{
+                        label: '技能评估',
+                        data: [90, 75, 85, 80, 70, 65],
+                        backgroundColor: 'rgba(0, 150, 255, 0.2)',
+                        borderColor: '#0096ff',
+                        pointBackgroundColor: '#0096ff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { labels: { color: '#aaa' } } },
+                    scales: { r: { grid: { color: '#333' }, ticks: { color: '#aaa' } } }
+                }
+            });
+
+            // D3 条形图
+            const data1 = [10, 25, 15, 30, 20];
+            const svg1 = d3.select('#d3-chart1');
+            svg1.selectAll('*').remove();
+            
+            const margin = { top: 20, right: 20, bottom: 30, left: 40 };
+            const width = 500 - margin.left - margin.right;
+            const height = 260 - margin.top - margin.bottom;
+            
+            const g = svg1.append('g')
+                .attr('transform', `translate(${margin.left},${margin.top})`);
+            
+            const x = d3.scaleBand()
+                .range([0, width])
+                .domain(d3.range(data1.length))
+                .padding(0.1);
+            
+            const y = d3.scaleLinear()
+                .range([height, 0])
+                .domain([0, d3.max(data1)]);
+            
+            g.selectAll('.bar')
+                .data(data1)
+                .enter()
+                .append('rect')
+                .attr('class', 'bar')
+                .attr('x', (d, i) => x(i))
+                .attr('y', d => y(d))
+                .attr('width', x.bandwidth())
+                .attr('height', d => height - y(d));
+            
+            g.append('g')
+                .attr('transform', `translate(0,${height})`)
+                .call(d3.axisBottom(x).tickFormat(i => `Item ${i+1}`))
+                .style('color', '#aaa');
+            
+            g.append('g')
+                .call(d3.axisLeft(y))
+                .style('color', '#aaa');
+
+            // D3 散点图
+            const data2 = d3.range(20).map(() => ({
+                x: Math.random() * 100,
+                y: Math.random() * 100
+            }));
+            
+            const svg2 = d3.select('#d3-chart2');
+            svg2.selectAll('*').remove();
+            
+            const g2 = svg2.append('g')
+                .attr('transform', `translate(${margin.left},${margin.top})`);
+            
+            const x2 = d3.scaleLinear()
+                .domain([0, 100])
+                .range([0, width]);
+            
+            const y2 = d3.scaleLinear()
+                .domain([0, 100])
+                .range([height, 0]);
+            
+            g2.selectAll('circle')
+                .data(data2)
+                .enter()
+                .append('circle')
+                .attr('cx', d => x2(d.x))
+                .attr('cy', d => y2(d.y))
+                .attr('r', 5)
+                .attr('fill', '#0096ff')
+                .attr('opacity', 0.6);
+            
+            g2.append('g')
+                .attr('transform', `translate(0,${height})`)
+                .call(d3.axisBottom(x2))
+                .style('color', '#aaa');
+            
+            g2.append('g')
+                .call(d3.axisLeft(y2))
+                .style('color', '#aaa');
+        });
+
+        // 复制代码功能
+        function copyCode(element) {
+            const code = element.innerText
+                .replace(/&nbsp;/g, ' ')
+                .replace(/&lt;/g, '<')
+                .replace(/&gt;/g, '>');
+            
+            navigator.clipboard.writeText(code).then(() => {
+                const originalText = element.innerText;
+                element.innerText = '✓ 已复制！';
+                setTimeout(() => {
+                    element.innerText = originalText;
+                }, 1000);
+            });
+        }
+
+        // 复制所有代码
+        function copyAllCode() {
+            const codes = [];
+            document.querySelectorAll('.viz-code').forEach(el => {
+                codes.push(el.innerText.replace(/&nbsp;/g, ' ').replace(/&lt;/g, '<').replace(/&gt;/g, '>'));
+            });
+            
+            navigator.clipboard.writeText(codes.join('\n\n')).then(() => {
+                alert('所有代码已复制到剪贴板！');
+            });
+        }
+    </script>
+</body>
+</html>
